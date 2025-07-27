@@ -1,0 +1,13 @@
+tactic_name,side,type,arch,bonus,clutch
+strat1,offense,strategy,power run,0,0
+strat2,offense,strategy,spread,0,0
+strat3,offense,strategy,west coast,0,0
+strat4,offense,strategy,vertical,0,0
+defstrat1,defense,strategy,none,1,0
+defstrat2,defense,strategy,none,1,0
+defstrat3,defense,strategy,none,1,0
+defstrat4,defense,strategy,none,1,0
+tactic1,offense,tactic,power run,12,0
+tactic2,offense,tactic,spread,12,0
+tactic3,offense,tactic,west coast,12,0
+tactic4,offense,tactic,vertical,12,0

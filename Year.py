@@ -3,17 +3,19 @@ from Week import Week
 import os
 
 class Year:
-    def __init__(self, year_number, simulation, user_team_players, weeks_per_year):
+    def __init__(self, year_number, simulation, user_team_players, weeks_per_year, sim_stats, salary_cap):
         self.year_number = year_number
         self.simulation = simulation
         self.user_team_players = user_team_players
         self.weeks_per_year = weeks_per_year
+        self.sim_stats = sim_stats
+        self.salary_cap = salary_cap
         self.players_per_free_agency = 3
         self.tactics_per_offseason = 5
 
         self.week_number = 1
         self.wins = 0
-        self.playoff_wins = 0
+        self.playoff_wins = None
         self.current_week = None
         self.opponents = {}
         self.playoff_bracket = {}
@@ -32,6 +34,12 @@ class Year:
         input("\nPress Enter to continue to the playoffs...")
 
         self.handle_playoffs()
+        self.sim_stats['yearly_results'].append({
+            'year': self.year_number,
+            'wins': self.wins,
+            'losses': self.week_number - self.wins - 1,
+            'playoff_wins': self.playoff_wins if self.playoff_wins is not None else 'DNQ',
+        })
 
     def handle_regular_season(self):
         """Handle regular season events."""  
@@ -178,6 +186,7 @@ class Year:
         view_playoff_bracket()
         if self.playoff_wins == games_needed:
             print("🎉 Congratulations! You won the Super Bowl!")
+            self.sim_stats['sb_wins'] += 1
         else:
             print("🏈 Your playoff run has ended.")
         input("\nPress Enter to finish the playoffs...")
@@ -255,6 +264,23 @@ class Year:
                 print(f"⚠️ Tactic ID {tid} not found in simulation database.")
 
         input("\nPress Enter to continue...")
+
+    def cut_players(self):
+        """Command-line prompt to cut players from your team."""
+        self.display_team_roster()
+        if not self.user_team_players:
+            print("[Notice] Your team has no players to cut.")
+            return 
+        print("\nEnter the number(s) of the player(s) you want to cut (e.g. 1 or 1,3):")
+        choice = input(">> ").strip()
+        selected_indices = {int(i) for i in choice.split(",") if i.isdigit() and 1 <= int(i) <= self.players_per_free_agency}
+
+        if not selected_indices:
+            print("[Notice] No valid player IDs selected.")
+            return
+        for pid in selected_indices:
+            pid = self.user_team_players[pid - 1]  # Convert to actual player
+            self.user_team_players.remove(pid)
 
     def add_players(self):
         """Command-line prompt to add players from simulation."""

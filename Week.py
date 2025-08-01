@@ -20,21 +20,59 @@ class Week:
         win = self.play()
         return win
 
-    def display_team_roster(self):
+    def display_team_roster(self, display_attribute=True):
+        self.clear_console()
         """Show current players on your team with their attributes."""
         if not self.user_team_players:
             print("\n📭 Your team has no players yet.")
-            return
+            input("\nPress Enter to continue...")
+            return 0
 
-        print("\n📋 Your Current Team:")
-        for pid in self.user_team_players:
+        print("\n📋 Your Team Roster:")
+        for team_player in self.user_team_players:
+            pid = team_player.get('player_name')
             player = self.simulation.players.get(pid)
             if player:
-                print(f"\nPlayer Name: {pid}")
+                print(f"\nPlayer ID: {pid}")
                 for key, value in player.items():
                     print(f"  {key}: {value}")
             else:
-                print(f"⚠️ Player Name {pid} not found in simulation database.")
+                print(f"⚠️ Player ID {pid} not found in simulation database.")
+
+        # Sum calculations
+        total_salary = 0
+        total_clutch = 0
+        offense_sums = {'power run': 0, 'spread': 0, 'west coast': 0, 'vertical': 0}
+        defense_sums = {'power run': 0, 'spread': 0, 'west coast': 0, 'vertical': 0}
+
+        for team_player in self.user_team_players:
+            pid = team_player.get('player_name')
+            player = self.simulation.players.get(pid)
+            if player:
+                total_salary += int(player.get('salary', 0))
+                total_clutch += int(player.get('clutch', 0))
+                side = player.get('side', '').lower()
+                for attr in offense_sums:
+                    val = player.get(attr, 0)
+                    if side == 'offense':
+                        offense_sums[attr] += int(val)
+                    elif side == 'defense':
+                        defense_sums[attr] += int(val)
+
+        if display_attribute:
+            print("\nTeam Attributes:")
+            print(f"Total Salary: ${total_salary}")
+            print(f"Total Clutch: {total_clutch}")
+            print("Offense Attribute Sums:")
+            for attr, val in offense_sums.items():
+                print(f"  {attr}: {val}")
+            print("Defense Attribute Sums:")
+            for attr, val in defense_sums.items():
+                print(f"  {attr}: {val}")
+
+        input("\nPress Enter to continue...")
+
+        return total_salary
 
     def display_next_opponent(self):
         if not self.opponents:
@@ -168,7 +206,8 @@ class Week:
             elif tactic['side'] == 'defense' and tactic['arch'] == def_arch:
                 def_rat += int(tactic['bonus'])
 
-        for pid in self.user_team_players:
+        for team_player in self.user_team_players:
+            pid = team_player.get('player_name')
             player = self.simulation.players.get(pid)
             if player['side'] == 'offense':
                 off_rat += int(player[off_arch])
@@ -182,7 +221,8 @@ class Week:
             clutch = 1
             clutch += int(off_tactic['clutch'])
             clutch += int(def_tactic['clutch'])
-            for pid in self.user_team_players:
+            for team_player in self.user_team_players:
+                pid = team_player.get('player_name')
                 player = self.simulation.players.get(pid)
                 clutch += int(player['clutch'])
 
@@ -218,7 +258,8 @@ class Week:
             clutch = 1
             clutch += int(off_tactic['clutch'])
             clutch += int(def_tactic['clutch'])
-            for pid in self.user_team_players:
+            for team_player in self.user_team_players:
+                pid = team_player.get('player_name')
                 player = self.simulation.players.get(pid)
                 clutch += int(player['clutch'])
 

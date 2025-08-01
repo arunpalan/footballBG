@@ -50,6 +50,7 @@ class Year:
             self.clear_console()
             print(f"\n--- Week {self.week_number} ---")
             print(f"\nTeam record is {self.wins}-{self.week_number-self.wins-1}")
+            print(f"Cash available: ${self.sim_stats['cash']}")
             print("\nChoose an activity:")
             print("1. View Team Roster")
             print("2. View Tactics")
@@ -226,16 +227,17 @@ class Year:
                 'result': 'Not Played'
             }
 
-    def display_team_roster(self):
+    def display_team_roster(self, display_attribute=True):
         self.clear_console()
         """Show current players on your team with their attributes."""
         if not self.user_team_players:
             print("\n📭 Your team has no players yet.")
             input("\nPress Enter to continue...")
-            return
+            return 0
 
-        print("\n📋 Your Current Team:")
-        for pid in self.user_team_players:
+        print("\n📋 Your Team Roster:")
+        for team_player in self.user_team_players:
+            pid = team_player.get('player_name')
             player = self.simulation.players.get(pid)
             if player:
                 print(f"\nPlayer ID: {pid}")
@@ -244,7 +246,40 @@ class Year:
             else:
                 print(f"⚠️ Player ID {pid} not found in simulation database.")
 
+        # Sum calculations
+        total_salary = 0
+        total_clutch = 0
+        offense_sums = {'power run': 0, 'spread': 0, 'west coast': 0, 'vertical': 0}
+        defense_sums = {'power run': 0, 'spread': 0, 'west coast': 0, 'vertical': 0}
+
+        for team_player in self.user_team_players:
+            pid = team_player.get('player_name')
+            player = self.simulation.players.get(pid)
+            if player:
+                total_salary += int(player.get('salary', 0))
+                total_clutch += int(player.get('clutch', 0))
+                side = player.get('side', '').lower()
+                for attr in offense_sums:
+                    val = player.get(attr, 0)
+                    if side == 'offense':
+                        offense_sums[attr] += int(val)
+                    elif side == 'defense':
+                        defense_sums[attr] += int(val)
+
+        if display_attribute:
+            print("\nTeam Attributes:")
+            print(f"Total Salary: ${total_salary}")
+            print(f"Total Clutch: {total_clutch}")
+            print("Offense Attribute Sums:")
+            for attr, val in offense_sums.items():
+                print(f"  {attr}: {val}")
+            print("Defense Attribute Sums:")
+            for attr, val in defense_sums.items():
+                print(f"  {attr}: {val}")
+
         input("\nPress Enter to continue...")
+
+        return total_salary
 
     def display_tactics(self):
         self.clear_console()
@@ -267,13 +302,16 @@ class Year:
 
     def cut_players(self):
         """Command-line prompt to cut players from your team."""
-        self.display_team_roster()
+        team_cost = self.display_team_roster(display_attribute=False)
+
         if not self.user_team_players:
             print("[Notice] Your team has no players to cut.")
             return 
+        
+        print(f"\nCurrent Team Cost: ${team_cost} and Salary Cap: ${self.salary_cap}")
         print("\nEnter the number(s) of the player(s) you want to cut (e.g. 1 or 1,3):")
         choice = input(">> ").strip()
-        selected_indices = {int(i) for i in choice.split(",") if i.isdigit() and 1 <= int(i) <= self.players_per_free_agency}
+        selected_indices = {int(i) for i in choice.split(",") if i.isdigit() and 1 <= int(i) <= len(self.user_team_players)}
 
         if not selected_indices:
             print("[Notice] No valid player IDs selected.")
@@ -282,10 +320,15 @@ class Year:
             pid = self.user_team_players[pid - 1]  # Convert to actual player
             self.user_team_players.remove(pid)
 
-    def add_players(self):
-        """Command-line prompt to add players from simulation."""
-        self.display_team_roster()  # Step 1: Show team before selection
+    def player_name_exists(self, player_name): 
+        """Check if a player_name exists in user_team_players."""
+        return any(player.get('player_name') == player_name for player in self.user_team_players)
 
+    def add_players(self):
+        """Command-line prompt to add players from simulation."""        
+        self.cut_players()
+
+        team_cost = self.display_team_roster()  # Step 1: Show team before selection
         eligible_players = [p for pid, p in self.simulation.players.items() if pid not in self.user_team_players]
 
         if len(eligible_players) < self.players_per_free_agency:
@@ -307,13 +350,22 @@ class Year:
 
         for i in selected_indices:
             player_id = options[i - 1]['player_name']
-            if player_id not in self.user_team_players:
-                self.user_team_players.append(player_id)
+            if not self.player_name_exists(player_id):
+                if team_cost + int(options[i - 1].get('salary', 0)) > self.salary_cap:
+                    print(f"[Skipped] Adding {player_id} would exceed salary cap.")
+                    input("Press Enter to continue")
+                    continue
+                player = {
+                    'player_name': player_id,
+                    'contract': 2
+                }
+                self.user_team_players.append(player)
                 print(f"[Added] Player {player_id} to your team!")
             else:
                 print(f"[Skipped] Player {player_id} is already on your team.")
 
-        self.display_team_roster()  # Step 2: Show team after updates
+        team_cost = self.display_team_roster()  # Step 2: Show team after updates
+        self.sim_stats['cash'] += (self.salary_cap - team_cost)
 
     def add_tactics(self):
         self.display_tactics()

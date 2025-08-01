@@ -8,7 +8,7 @@ class Engine:
         self.simulation.initialize_simulation()
         
         self.year_number = 1
-        self.weeks_per_year = 10
+        self.weeks_per_year = 1
         self.salary_cap = 20
         self.user_team_players = []  # This could be player IDs or full player dicts
         self.sim_stats = {

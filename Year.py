@@ -1,4 +1,6 @@
 import random
+
+from pandas import cut
 from Week import Week
 import os
 
@@ -71,12 +73,63 @@ class Year:
 
                 input("\nPress Enter to continue to the next week...")
 
+    def decrement_contracts(self):
+        """Decrement player contracts at the end of the year."""
+        for player in self.user_team_players:
+            player['contract'] -= 1
+
+    def compute_contract_value(self, player):
+        """Compute a new contract value for a player."""
+        attr_total = sum(int(player.get(attr, 0)) for attr in ['power run', 'spread', 'west coast', 'vertical'])
+        attr_total += 2*int(player.get('clutch', 0))
+        return max(int(player['salary'])+1, attr_total)
+
+    def handle_contracts(self):
+        """Handle player contracts and salary cap."""
+        self.clear_console()
+        print(f"\n--- Contract Management for Year {self.year_number} ---")
+        total_salary = self.display_team_roster(display_attribute=False)
+        self.decrement_contracts()
+
+        cutlist = []
+
+        for team_player in self.user_team_players:
+            if team_player['contract'] <= 0:
+                player_id = team_player['player_name']
+                player = self.simulation.players.get(player_id)
+                print(f"[Notice] Player {player_id} has no contract left")
+                new_value = self.compute_contract_value(player)
+                increased_salary = new_value - int(player['salary'])
+                print(f"[Update] Player {player_id} new salary is ${new_value} and teams total salary is now ${total_salary + increased_salary}")
+
+                extend = input(f"Do you want to extend {player_id} (y/n)? ").strip().lower()
+                player['salary'] = new_value
+                if extend == 'y':
+                    team_player['contract'] = 2
+                    print(f"[Notice] Player {player_id} has been extended.")
+                    total_salary += increased_salary
+                else:
+                    cutlist.append(team_player)
+                    print(f"[Notice] Player {player_id} has been cut.")
+
+        for player in cutlist:
+            self.user_team_players.remove(player)
+
+        if total_salary > self.salary_cap:
+            print(f"[Warning] Your team salary exceeds the salary cap of ${self.salary_cap}.")
+            print("You will need to cut players to stay under the cap.")
+            while total_salary > self.salary_cap:
+                total_salary = self.cut_players()
+
+        input("\nPress Enter to continue...")
+
     def handle_offseason(self):
         """Handle offseason activities like adding players and tactics."""
         added_players = False
         added_tactics = False
         ready_to_proceed = False
         self.schedule_matches()
+        self.handle_contracts()
 
         while not ready_to_proceed:
             self.clear_console()
@@ -243,6 +296,7 @@ class Year:
                 print(f"\nPlayer ID: {pid}")
                 for key, value in player.items():
                     print(f"  {key}: {value}")
+                print(f"  contract: {team_player.get('contract', 'N/A')}")
             else:
                 print(f"⚠️ Player ID {pid} not found in simulation database.")
 
@@ -306,7 +360,7 @@ class Year:
 
         if not self.user_team_players:
             print("[Notice] Your team has no players to cut.")
-            return 
+            return team_cost
         
         print(f"\nCurrent Team Cost: ${team_cost} and Salary Cap: ${self.salary_cap}")
         print("\nEnter the number(s) of the player(s) you want to cut (e.g. 1 or 1,3):")
@@ -315,10 +369,12 @@ class Year:
 
         if not selected_indices:
             print("[Notice] No valid player IDs selected.")
-            return
+            return team_cost
         for pid in selected_indices:
             pid = self.user_team_players[pid - 1]  # Convert to actual player
             self.user_team_players.remove(pid)
+            team_cost = self.display_team_roster(display_attribute=False)
+            return team_cost
 
     def player_name_exists(self, player_name): 
         """Check if a player_name exists in user_team_players."""

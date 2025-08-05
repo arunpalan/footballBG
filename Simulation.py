@@ -9,6 +9,7 @@ class Simulation:
         self.coaches = {}
         self.fans = {}
         self.tactics = {}
+        self
 
     def load_csv_data(self, filepath, key_field):
         """General method to load CSV data into a dictionary keyed by 'key_field'."""
@@ -28,5 +29,6 @@ class Simulation:
         self.teams = self.load_csv_data('teams.csv', key_field='team_name')
         self.players = self.load_csv_data('players.csv', key_field='player_name')
         #self.coaches = self.load_csv_data('coaches.csv', key_field='coach_id')
-        #self.fans = self.load_csv_data('fans.csv', key_field='fan_id')
+        self.fans = self.load_csv_data('fans.csv', key_field='name')
         self.tactics = self.load_csv_data('tactics.csv', key_field='tactic_name')
+        self.stadiums = self.load_csv_data('stadiums.csv', key_field='name')

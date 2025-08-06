@@ -12,7 +12,7 @@ class Engine:
         self.salary_cap = 20
         self.debug_mode = True
         self.user_team_players = []  # This could be player IDs or full player dicts
-        self.stadium = 'stadium1'  # Default stadium, can be changed later
+        self.stadium = ['stadium1']  # Default stadium, can be changed later
         self.fans = []
         self.sim_stats = {
             'cash': 0,

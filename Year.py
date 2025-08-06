@@ -271,7 +271,7 @@ class Year:
         # Example logic: Display final stats, reset for next year, etc.
         total_games = self.weeks_per_year
         success = (self.wins + 2*self.playoff_wins) / total_games if self.playoff_wins else self.wins / total_games
-        stadium = self.simulation.stadiums.get(self.stadium)
+        stadium = self.simulation.stadiums.get(self.stadium[0])
 
         if success > float(stadium['expectations']) + 0.1:
             print(f"Your team greatly exceeded expectations this year!")
@@ -293,7 +293,7 @@ class Year:
         premium_fans = [fan for fan in self.fans if self.simulation.fans.get(fan)['type'] == 'premium']
         box_fans = [fan for fan in self.fans if self.simulation.fans.get(fan)['type'] == 'box']
 
-        stadium = self.simulation.stadiums.get(self.stadium)
+        stadium = self.simulation.stadiums.get(self.stadium[0])
 
         if int(stadium['box_seating']) > len(box_fans):
 
@@ -391,6 +391,37 @@ class Year:
         print("No fans can be upgraded, all fans are already at the highest level.")
         input("\nPress Enter to continue...")
 
+    def change_stadium(self):
+        """Change the stadium to improve fan experience."""
+        current_stadium = self.simulation.stadiums.get(self.stadium[0])
+
+        eligible_stadiums = [s for s in self.simulation.stadiums.values() if s['name'] != current_stadium['name']]
+        if not eligible_stadiums:
+            print("No other stadiums available to change to.")
+            input("\nPress Enter to continue...")
+            return
+        
+        self.clear_console()
+        print(f"\nAvailable Cash: ${self.sim_stats['cash']}")
+        print("\nAvailable Stadiums:")
+        for idx, stadium in enumerate(eligible_stadiums, start=1):
+            print(f"Stadium {idx}:")
+            for key, value in stadium.items():
+                print(f"  {key}: {value}")
+
+        choice = input("\nEnter the number of the stadium you want to change to: ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(eligible_stadiums):
+            if int(self.sim_stats['cash']) < int(eligible_stadiums[int(choice) - 1]['cost']):
+                print("You do not have enough cash to change to this stadium.")
+                input("\nPress Enter to continue...")
+                return
+            self.sim_stats['cash'] = int(self.sim_stats['cash']) - int(eligible_stadiums[int(choice) - 1]['cost'])
+            new_stadium = eligible_stadiums[int(choice) - 1]['name']
+            self.stadium[0] = new_stadium
+            print(f"[Update] Stadium changed to {new_stadium}.")
+            print(f"Available Cash: ${self.sim_stats['cash']}")
+            input("\nPress Enter to continue...")
+
     def handle_fans(self, performance_rating):
         """Handle fan reactions based on team performance."""
         flag_removal = []
@@ -409,22 +440,38 @@ class Year:
         self.clear_console()
         self.display_stadium()
 
-        while performance_rating > 0:
+        ready_to_proceed = False
+
+        while not ready_to_proceed:
             print(f"\n--- Fan Engagement for Year {self.year_number} ---")
             print("Choose an activity to improve fan engagement:")
             print("1. Add fans")
             print("2. Increase loyalty of fans")
             print("3. Display stadium details")
+            print("4. Change stadium")
+            print("5. Exit Fan Engagement")
 
-            choice = input("Enter your choice (1-3): ").strip()
+            choice = input("Enter your choice (1-5): ").strip()
             if choice == '1':
+                if performance_rating < 0:
+                    print("You have no more performance points.")
+                    input("\nPress Enter to continue...")
+                    continue
                 self.add_fans()
                 performance_rating -= 1
             elif choice == '2':
+                if performance_rating < 0:
+                    print("You have no more performance points.")
+                    input("\nPress Enter to continue...")
+                    continue
                 self.upgrade_fans()
                 performance_rating -= 1
             elif choice == '3':
                 self.display_stadium()
+            elif choice == '4':
+                self.change_stadium()
+            elif choice == '5':
+                ready_to_proceed = True
             else:
                 print("Invalid choice, please try again.")
 
@@ -539,7 +586,7 @@ class Year:
     
     def display_stadium(self):
         self.clear_console()
-        stadium = self.simulation.stadiums.get(self.stadium)
+        stadium = self.simulation.stadiums.get(self.stadium[0])
         if not stadium:
             print("\n📭 You have no stadium assigned.")
             input("\nPress Enter to continue...")
@@ -553,7 +600,7 @@ class Year:
         for fan_id in self.fans:
             fan = self.simulation.fans.get(fan_id)
             if fan:
-                print(f"  {fan['name']} (Type: {fan['type']}, Interest: {fan['interest']}, Loyalty: {fan['loyalty']})")
+                print(f"  {fan['name']} Type: {fan['type']}, Interest: {fan['interest']}, Loyalty: {fan['loyalty']}")
             else:
                 print(f"⚠️ Fan ID {fan_id} not found in simulation database.")
 

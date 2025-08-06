@@ -2,12 +2,13 @@ import random
 import os 
 
 class Week:
-    def __init__(self, week_number, simulation, user_team_players, opponents, tactics):
+    def __init__(self, week_number, simulation, user_team_players, opponents, tactics, debug_mode=False):
         self.week_number = week_number
         self.simulation = simulation
         self.user_team_players = user_team_players
         self.opponents = opponents
         self.tactics = tactics
+        self.debug_mode = debug_mode
 
         self.off_strategy = None
         self.def_strategy = None
@@ -101,6 +102,13 @@ class Week:
     def gameplan(self):
         self.display_next_opponent()
 
+        if self.debug_mode:
+            self.off_strategy = 'strat1'
+            self.def_strategy = 'defstrat1'
+            self.off_tactics = []
+            self.def_tactics = []
+            return
+
         tactic_selected = False
 
         while not tactic_selected:
@@ -190,6 +198,11 @@ class Week:
             tactic_selected = True
 
     def play(self):
+        if self.debug_mode:
+            print("Debug mode: Simulating a win for testing purposes.")
+            self.opponents[self.week_number]['result'] = "W 30-20"
+            return 1
+        
         off_tactic = self.simulation.tactics.get(self.off_strategy)
         def_tactic = self.simulation.tactics.get(self.def_strategy)
         off_arch = off_tactic['arch']

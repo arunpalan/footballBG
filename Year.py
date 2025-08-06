@@ -4,7 +4,7 @@ from Week import Week
 import os
 
 class Year:
-    def __init__(self, year_number, simulation, user_team_players, weeks_per_year, sim_stats, salary_cap, stadium, fans):
+    def __init__(self, year_number, simulation, user_team_players, weeks_per_year, sim_stats, salary_cap, stadium, fans, debug_mode):
         self.year_number = year_number
         self.simulation = simulation
         self.user_team_players = user_team_players
@@ -13,6 +13,7 @@ class Year:
         self.salary_cap = salary_cap
         self.stadium = stadium
         self.fans = fans
+        self.debug_mode = debug_mode
         self.players_per_free_agency = 3
         self.tactics_per_offseason = 5
 
@@ -61,7 +62,7 @@ class Year:
             print("2. View Tactics")
             print("3. View Schedule")
             print("4. Play Match")
-            choice = input("Enter your choice (1-4): ").strip()
+            choice = input("Enter your choice (1-4): ").strip() if not self.debug_mode else '4'
             if choice == '1':
                 self.display_team_roster()  
             elif choice == '2':
@@ -69,7 +70,7 @@ class Year:
             elif choice == '3':
                 self.view_schedule()
             elif choice == '4':
-                self.current_week = Week(self.week_number, self.simulation, self.user_team_players, self.opponents, self.tactics)
+                self.current_week = Week(self.week_number, self.simulation, self.user_team_players, self.opponents, self.tactics, self.debug_mode)
                 win = self.current_week.run_events()
                 self.wins += win
                 self.week_number += 1
@@ -130,7 +131,7 @@ class Year:
         """Collect revenue from fans based on their type."""
         total_revenue = 0
 
-        for fan_id in self.fans.values():
+        for fan_id in self.fans:
             fan = self.simulation.fans.get(fan_id)
             total_revenue += int(fan['revenue'])
 
@@ -158,7 +159,7 @@ class Year:
             print("5. View Schedule")
             print("6. Exit Offseason")
 
-            choice = input("Enter your choice (1-6): ").strip()
+            choice = input("Enter your choice (1-6): ").strip() if not self.debug_mode else '6'
             if choice == '1':
                 if not added_players:
                     added_players = True
@@ -228,7 +229,7 @@ class Year:
             print("2. View Tactics")
             print("3. View Playoff Bracket")
             print("4. Play Playoff Game")
-            choice = input("Enter your choice (1-4): ").strip()
+            choice = input("Enter your choice (1-4): ").strip() if not self.debug_mode else '4'
             if choice == '1':
                 self.display_team_roster()
             elif choice == '2':
@@ -240,7 +241,7 @@ class Year:
                 # You can customize opponent logic as needed
                 print("\nPlaying playoff game...")
 
-                self.current_week = Week(playoff_round, self.simulation, self.user_team_players, self.playoff_bracket, self.tactics)
+                self.current_week = Week(playoff_round, self.simulation, self.user_team_players, self.playoff_bracket, self.tactics, self.debug_mode)
                 win = self.current_week.run_events()
 
                 if win < 0.5:
@@ -263,19 +264,22 @@ class Year:
 
     def handle_postseason(self):
         """Handle postseason activities after playoffs."""
+        self.clear_console()
         print(f"\n--- Postseason Activities for Year {self.year_number} ---")
         print("You can now review your season and prepare for the next year.")
         
         # Example logic: Display final stats, reset for next year, etc.
         total_games = self.weeks_per_year
         success = (self.wins + 2*self.playoff_wins) / total_games if self.playoff_wins else self.wins / total_games
-        if success > self.stadium['expectations'] + 0.1:
+        stadium = self.simulation.stadiums.get(self.stadium)
+
+        if success > float(stadium['expectations']) + 0.1:
             print(f"Your team greatly exceeded expectations this year!")
             self.handle_fans(2)
-        elif success > self.stadium['expectations']:
+        elif success > float(stadium['expectations']):
             print(f"Your team exceeded expectations this year.")
             self.handle_fans(1)
-        elif success < self.stadium['expectations'] - 0.1:
+        elif success < float(stadium['expectations']) - 0.1:
             print(f"Your team disappointed this year.")
             self.handle_fans(-2)
         else:
@@ -285,155 +289,142 @@ class Year:
         input("\nPress Enter to continue to the next year...")
 
     def add_fans(self):
-        general_fans = [fan for fan in self.fans.values() if fan['type'] == 'general']
-        premium_fans = [fan for fan in self.fans.values() if fan['type'] == 'premium']
-        box_fans = [fan for fan in self.fans.values() if fan['type'] == 'box']
+        general_fans = [fan for fan in self.fans if self.simulation.fans.get(fan)['type'] == 'general']
+        premium_fans = [fan for fan in self.fans if self.simulation.fans.get(fan)['type'] == 'premium']
+        box_fans = [fan for fan in self.fans if self.simulation.fans.get(fan)['type'] == 'box']
 
-        if self.stadium['box_seats'] > len(box_fans):
-            
+        stadium = self.simulation.stadiums.get(self.stadium)
+
+        if int(stadium['box_seating']) > len(box_fans):
+
             # Filter fans with type 'box' and interest 'low'
-            filtered = self.simulation.fans[
-                (self.simulation.fans['type'] == 'box') &
-                (self.simulation.fans['interest'] == 'low')
-            ]
-            
-            if not filtered.empty:
-                selected_fan = filtered.sample(1).iloc[0]
-                self.fans.append(selected_fan['name'])
+            filtered = [fan for fan in self.simulation.fans if self.simulation.fans.get(fan)['type'] == 'box' and self.simulation.fans.get(fan)['interest'] == 'low']
+
+            if filtered:
+                selected_fan = random.choice(filtered)
+                self.fans.append(selected_fan)
             else:
                 print("No matching fan found.")
+                input("\nPress Enter to continue...")
 
-        elif self.stadium['premium_seats'] > len(premium_fans):
+        elif int(stadium['premium_seating']) > len(premium_fans):
             # Filter fans with type 'premium' and interest 'low'
-            filtered = self.simulation.fans[
-                (self.simulation.fans['type'] == 'premium') &
-                (self.simulation.fans['interest'] == 'low')
-            ]
-            
-            if not filtered.empty:
-                selected_fan = filtered.sample(1).iloc[0]
-                self.fans.append(selected_fan['name'])
-            else:
-                print("No matching fan found.")
+            filtered = [fan for fan in self.simulation.fans if self.simulation.fans.get(fan)['type'] == 'premium' and self.simulation.fans.get(fan)['interest'] == 'low']
 
-        elif self.stadium['general_seating'] > len(general_fans):
-            # Filter fans with type 'general' and interest 'low'
-            filtered = self.simulation.fans[
-                (self.simulation.fans['type'] == 'general') &
-                (self.simulation.fans['interest'] == 'low')
-            ]
-            
-            if not filtered.empty:
-                selected_fan = filtered.sample(1).iloc[0]
-                self.fans.append(selected_fan['name'])
+            if filtered:
+                selected_fan = random.choice(filtered)
+                self.fans.append(selected_fan)
             else:
                 print("No matching fan found.")
+                input("\nPress Enter to continue...")
+
+        elif int(stadium['general_seating']) > len(general_fans):
+            # Filter fans with type 'general' and interest 'low'
+            filtered = [fan for fan in self.simulation.fans if self.simulation.fans.get(fan)['type'] == 'general' and self.simulation.fans.get(fan)['interest'] == 'low']
+
+            if filtered:
+                selected_fan = random.choice(filtered)
+                self.fans.append(selected_fan)
+            else:
+                print("No matching fan found.")
+                input("\nPress Enter to continue...")
 
         else:
             print("No more fans can be added, all seats are filled.")
+            input("\nPress Enter to continue...")
 
     def upgrade_fans(self):
-        general_fans = [fan for fan in self.fans.values() if fan['type'] == 'general']
-        premium_fans = [fan for fan in self.fans.values() if fan['type'] == 'premium']
-        box_fans = [fan for fan in self.fans.values() if fan['type'] == 'box']
+        general_fans = [fan for fan in self.fans if self.simulation.fans.get(fan)['type'] == 'general']
+        premium_fans = [fan for fan in self.fans if self.simulation.fans.get(fan)['type'] == 'premium']
+        box_fans = [fan for fan in self.fans if self.simulation.fans.get(fan)['type'] == 'box']
 
         for box_fan in box_fans:
             if box_fan['interest'] == 'low':
-                filtered = self.simulation.fans[
-                    (self.simulation.fans['type'] == 'box') &
-                    (self.simulation.fans['interest'] == 'medium')
-                ]
-                if not filtered.empty:
-                    selected_fan = filtered.sample(1).iloc[0]
-                    self.fans.append(selected_fan['name'])
-                    self.fans.remove(box_fan['name'])
+                filtered = [fan for fan in self.simulation.fans if self.simulation.fans.get(fan)['type'] == 'box' and self.simulation.fans.get(fan)['interest'] == 'medium']
+                
+                if filtered:
+                    selected_fan = random.choice(filtered)
+                    self.fans.append(selected_fan)
+                    self.fans.remove(box_fan)
                     return
             elif box_fan['interest'] == 'medium':
-                filtered = self.simulation.fans[
-                    (self.simulation.fans['type'] == 'box') &
-                    (self.simulation.fans['interest'] == 'high')
-                ]
-                if not filtered.empty:
-                    selected_fan = filtered.sample(1).iloc[0]
-                    self.fans.append(selected_fan['name'])
-                    self.fans.remove(box_fan['name'])
+                filtered = [fan for fan in self.simulation.fans if self.simulation.fans.get(fan)['type'] == 'box' and self.simulation.fans.get(fan)['interest'] == 'high']
+                if filtered:
+                    selected_fan = random.choice(filtered)
+                    self.fans.append(selected_fan)
+                    self.fans.remove(box_fan)
                     return
 
         for premium_fan in premium_fans:
-            if premium_fan['interest'] == 'low':
-                filtered = self.simulation.fans[
-                    (self.simulation.fans['type'] == 'premium') &
-                    (self.simulation.fans['interest'] == 'medium')
-                ]
-                if not filtered.empty:
-                    selected_fan = filtered.sample(1).iloc[0]
-                    self.fans.append(selected_fan['name'])
-                    self.fans.remove(premium_fan['name'])
+            if self.simulation.fans.get(premium_fan)['interest'] == 'low':
+                filtered = [fan for fan in self.simulation.fans if self.simulation.fans.get(fan)['type'] == 'premium' and self.simulation.fans.get(fan)['interest'] == 'medium']
+                if filtered:
+                    selected_fan = random.choice(filtered)
+                    self.fans.append(selected_fan)
+                    self.fans.remove(premium_fan)
                     return
-            elif premium_fan['interest'] == 'medium':
-                filtered = self.simulation.fans[
-                    (self.simulation.fans['type'] == 'premium') &
-                    (self.simulation.fans['interest'] == 'high')
-                ]
-                if not filtered.empty:
-                    selected_fan = filtered.sample(1).iloc[0]
-                    self.fans.append(selected_fan['name'])
-                    self.fans.remove(premium_fan['name'])
+            elif self.simulation.fans.get(premium_fan)['interest'] == 'medium':
+                filtered = [fan for fan in self.simulation.fans if self.simulation.fans.get(fan)['type'] == 'premium' and self.simulation.fans.get(fan)['interest'] == 'high']
+                if filtered:
+                    selected_fan = random.choice(filtered)
+                    self.fans.append(selected_fan)
+                    self.fans.remove(premium_fan)
                     return
 
         for general_fan in general_fans:
-            if general_fan['interest'] == 'low':
-                filtered = self.simulation.fans[
-                    (self.simulation.fans['type'] == 'general') &
-                    (self.simulation.fans['interest'] == 'medium')
-                ]
-                if not filtered.empty:
-                    selected_fan = filtered.sample(1).iloc[0]
-                    self.fans.append(selected_fan['name'])
-                    self.fans.remove(general_fan['name'])   
+            if self.simulation.fans.get(general_fan)['interest'] == 'low':
+                filtered = [fan for fan in self.simulation.fans if self.simulation.fans.get(fan)['type'] == 'general' and self.simulation.fans.get(fan)['interest'] == 'medium']
+                if filtered:
+                    selected_fan = random.choice(filtered)
+                    self.fans.append(selected_fan)
+                    self.fans.remove(general_fan)
                     return
-                
-            elif general_fan['interest'] == 'medium':
-                filtered = self.simulation.fans[
-                    (self.simulation.fans['type'] == 'general') &
-                    (self.simulation.fans['interest'] == 'high')
-                ]
-                if not filtered.empty:
-                    selected_fan = filtered.sample(1).iloc[0]
-                    self.fans.append(selected_fan['name'])
-                    self.fans.remove(general_fan['name'])
+
+            elif self.simulation.fans.get(general_fan)['interest'] == 'medium':
+                filtered = [fan for fan in self.simulation.fans if self.simulation.fans.get(fan)['type'] == 'general' and self.simulation.fans.get(fan)['interest'] == 'high']
+                if filtered:
+                    selected_fan = random.choice(filtered)
+                    self.fans.append(selected_fan)
+                    self.fans.remove(general_fan)
                     return
                 
         print("No fans can be upgraded, all fans are already at the highest level.")
+        input("\nPress Enter to continue...")
 
     def handle_fans(self, performance_rating):
         """Handle fan reactions based on team performance."""
         flag_removal = []
 
-        for fan_id in self.fans.values():
+        for fan_id in self.fans:
             fan = self.simulation.fans.get(fan_id)
             if fan:
-                if 2*random.randint(1,6) - performance_rating > fan['loyalty']:
+                if 2*random.randint(1,6) - performance_rating > int(fan['loyalty']):
                     print(f"[Notice] Fan {fan['name']} is unhappy with the team's performance.")
+                    input(f"Press Enter to remove {fan['name']} from your fan base.")
                     flag_removal.append(fan_id)
 
         for fan_id in flag_removal:
             self.fans.remove(fan_id)
 
+        self.clear_console()
+        self.display_stadium()
+
         while performance_rating > 0:
-            self.clear_console()
             print(f"\n--- Fan Engagement for Year {self.year_number} ---")
             print("Choose an activity to improve fan engagement:")
             print("1. Add fans")
             print("2. Increase loyalty of fans")
+            print("3. Display stadium details")
 
-            choice = input("Enter your choice (1-2): ").strip()
+            choice = input("Enter your choice (1-3): ").strip()
             if choice == '1':
                 self.add_fans()
                 performance_rating -= 1
             elif choice == '2':
                 self.upgrade_fans()
                 performance_rating -= 1
+            elif choice == '3':
+                self.display_stadium()
             else:
                 print("Invalid choice, please try again.")
 
@@ -543,6 +534,28 @@ class Year:
                     print(f"  {key}: {value}")
             else:
                 print(f"⚠️ Tactic ID {tid} not found in simulation database.")
+
+        input("\nPress Enter to continue...")
+    
+    def display_stadium(self):
+        self.clear_console()
+        stadium = self.simulation.stadiums.get(self.stadium)
+        if not stadium:
+            print("\n📭 You have no stadium assigned.")
+            input("\nPress Enter to continue...")
+            return
+
+        print("\n🏟️ Your Stadium Details:")
+        for key, value in stadium.items():
+            print(f"  {key}: {value}")
+
+        print("Fans in your stadium:")
+        for fan_id in self.fans:
+            fan = self.simulation.fans.get(fan_id)
+            if fan:
+                print(f"  {fan['name']} (Type: {fan['type']}, Interest: {fan['interest']}, Loyalty: {fan['loyalty']})")
+            else:
+                print(f"⚠️ Fan ID {fan_id} not found in simulation database.")
 
         input("\nPress Enter to continue...")
 

@@ -4,7 +4,7 @@ from Week import Week
 import os
 
 class Year:
-    def __init__(self, year_number, simulation, user_team_players, weeks_per_year, sim_stats, salary_cap, stadium, fans, debug_mode):
+    def __init__(self, year_number, simulation, user_team_players, weeks_per_year, sim_stats, salary_cap, stadium, fans, strategies, sponsors, debug_mode):
         self.year_number = year_number
         self.simulation = simulation
         self.user_team_players = user_team_players
@@ -13,11 +13,16 @@ class Year:
         self.salary_cap = salary_cap
         self.stadium = stadium
         self.fans = fans
+        self.strategies = strategies
+        self.sponsors = sponsors
         self.debug_mode = debug_mode
+
         self.players_per_free_agency = 3
-        self.tactics_per_offseason = 5
+        self.strategies_per_season = 2
+        self.tactics_per_week = 1
         self.players_per_draft = 3
         self.development_points = 3
+        self.max_sponsors = 1
 
         self.bye_threshold = 0.75
         self.playoff_threshold = 0.55
@@ -137,6 +142,25 @@ class Year:
 
         input("\nPress Enter to continue...")
 
+    def handle_sponsors(self):
+        if not self.sponsors:
+            return
+        
+        """Handle sponsorships for the team."""
+        self.clear_console()
+        print(f"\n--- Sponsorship Management for Year {self.year_number} ---")
+        collected_amount = sum(int(self.simulation.sponsors.get(sponsor, {}).get('value', 0)) for sponsor in self.sponsors)
+        self.sim_stats['cash'] = int(self.sim_stats['cash']) + collected_amount
+        print(f"[Notice] Collected ${collected_amount} from sponsors.")
+        for sponsor_id in self.sponsors:
+            sponsor = self.simulation.sponsors.get(sponsor_id)
+            sponsor['contract'] = int(sponsor['contract']) - 1
+            if sponsor['contract'] <= 0:
+                self.sponsors.remove(sponsor_id)
+                print(f"[Notice] Sponsor {sponsor['company']} has ended their sponsorship.")
+        
+        input("\nPress Enter to continue...")
+
     def collect_revenue(self):
         """Collect revenue from fans based on their type."""
         total_revenue = 0
@@ -208,8 +232,9 @@ class Year:
         added_tactics = False
         ready_to_proceed = False
         self.collect_revenue()
-        self.schedule_matches()
+        self.handle_sponsors()
         self.handle_contracts()
+        self.schedule_matches()
 
         while not ready_to_proceed:
             self.clear_console()
@@ -354,6 +379,8 @@ class Year:
 
         input("\nPress Enter to continue to the draft...")
         self.draft_players()
+        input("\nPress Enter to continue to sponsorship...")
+        self.add_sponsors()
         input("\nPress Enter to finish the postseason...")
 
     def add_fans(self):
@@ -828,3 +855,54 @@ class Year:
         print(f"[Added] Player {player_to_draft['player_name']} to your team!")
 
         self.display_team_roster()
+
+    def add_sponsors(self):
+        """Add sponsors to the team."""
+        if len(self.sponsors) >= self.max_sponsors:
+            return
+
+        self.clear_console()
+        print(f"\n--- Sponsor Management for Year {self.year_number} ---")
+        print("You can add sponsors to your team to increase revenue.")
+
+        eligible_sponsors = [s for s in self.simulation.sponsors.values() if s['company'] not in self.sponsors and int(s['contract']) > 0]
+
+        if not eligible_sponsors:
+            print("[Notice] No eligible sponsors available.")
+            input("\nPress Enter to continue...")
+            return
+
+        print("Available Sponsors:")
+        win_pct = self.wins / self.weeks_per_year if self.weeks_per_year else 0
+        num_choices = 1
+        if win_pct >= self.playoff_threshold:
+            num_choices = 3
+        elif win_pct >= self.draft_threshold:
+            num_choices = 2
+
+        choices = random.sample(list(self.simulation.sponsors.values()), k=min(num_choices, len(self.simulation.sponsors)))
+
+        for idx, sponsor in enumerate(choices, start=1):
+            print(f"\nSponsor {idx}:")
+            for key, value in sponsor.items():
+                print(f"  {key}: {value}")
+
+        choice = input("Enter the number(s) of the sponsor you want to add (or 'done' to finish): ").strip()
+        if choice.lower() == 'done':
+            return
+
+        selected_choices = [int(c) for c in choice.split(",") if c.isdigit()]
+        if not selected_choices:
+            print("[Error] Invalid choice.")
+            input("\nPress Enter to continue...")
+            return
+
+        for sponsor_id in selected_choices:
+            if len(self.sponsors) >= self.max_sponsors:
+                print("[Notice] Maximum number of sponsors reached.")
+                input("\nPress Enter to continue...")
+                return
+            self.sponsors.append(choices[sponsor_id - 1]['company'])
+            print(f"[Added] Sponsor {choices[sponsor_id - 1]['company']}.")
+
+        input("\nPress Enter to continue...")

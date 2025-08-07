@@ -16,6 +16,11 @@ class Year:
         self.debug_mode = debug_mode
         self.players_per_free_agency = 3
         self.tactics_per_offseason = 5
+        self.players_per_draft = 3
+
+        self.bye_threshold = 0.75
+        self.playoff_threshold = 0.55
+        self.draft_threshold = 0.3
 
         self.week_number = 1
         self.wins = 0
@@ -192,14 +197,14 @@ class Year:
 
         total_games = self.weeks_per_year
         win_pct = self.wins / total_games if total_games else 0
-        made_playoffs = win_pct >= 0.55  # Example threshold for playoffs
+        made_playoffs = win_pct >= self.playoff_threshold
 
         if not made_playoffs:
             print("Your team did not qualify for the playoffs this year.")
             input("\nPress Enter to continue...")
             return
         
-        has_bye = win_pct >= 0.75
+        has_bye = win_pct >= self
         games_needed = 3 if has_bye else 4
 
         playoff_round = 1 if not has_bye else 2  # Start at Divisional if bye
@@ -286,7 +291,9 @@ class Year:
             print(f"Your team did not meet expectations this year.")
             self.handle_fans(-1)
 
-        input("\nPress Enter to continue to the next year...")
+        input("\nPress Enter to continue to the draft...")
+        self.draft_players()
+        input("\nPress Enter to finish the postseason...")
 
     def add_fans(self):
         general_fans = [fan for fan in self.fans if self.simulation.fans.get(fan)['type'] == 'general']
@@ -637,7 +644,9 @@ class Year:
         self.cut_players()
 
         team_cost = self.display_team_roster()  # Step 1: Show team before selection
-        eligible_players = [p for pid, p in self.simulation.players.items() if pid not in self.user_team_players]
+
+        # Only show players not already on the team and greater than 0 salary
+        eligible_players = [p for pid, p in self.simulation.players.items() if pid not in self.user_team_players and int(p.get('salary', 0)) > 0]
 
         if len(eligible_players) < self.players_per_free_agency:
             print("[Notice] Not enough eligible players to show 3 choices.")
@@ -706,3 +715,52 @@ class Year:
                 print(f"[Skipped] Tactic {tactic_id} is already on your team.")
 
         self.display_tactics()  # Step 2: Show team after updates
+
+    def draft_players(self):
+        self.clear_console()
+        
+        # Compute win percentage
+        total_games = self.weeks_per_year
+        win_pct = self.wins / total_games if total_games else 0
+
+        # Determine draft eligibility based on win percentage
+        if win_pct > self.draft_threshold:
+            print("[Draft Eligibility] You are not eligible to draft players.")
+            input("\nPress Enter to continue...")
+            return
+        
+        print("[Draft Eligibility] You are eligible to draft players.")
+        self.display_team_roster()
+        eligible_players = [p for pid, p in self.simulation.players.items() if pid not in self.user_team_players and int(p.get('salary', 0)) == 0]
+        if not eligible_players:
+            print("[Notice] No eligible players available for drafting.")
+            input("\nPress Enter to continue...")
+            return
+        
+        options = random.sample(eligible_players, k=min(self.players_per_draft, len(eligible_players)))
+
+        print("\n🎯 Choose a player to draft:")
+        for idx, player in enumerate(options, start=1):
+            print(f"\nPlayer {idx}:")
+            for key, value in player.items():
+                print(f"  {key}: {value}")
+
+        print("\nEnter the number of the player you want to draft:")
+        choice = input(">> ").strip()
+        selected_index = int(choice)
+
+        if selected_index < 1 or selected_index > len(options):
+            print("[Error] Invalid player selection.")
+            input("\nPress Enter to continue...")
+            return
+
+        player_to_draft = options[selected_index - 1]
+
+        player = {
+            'player_name': player_to_draft['player_name'],
+            'contract': 2
+        }
+        self.user_team_players.append(player)
+        print(f"[Added] Player {player_to_draft['player_name']} to your team!")
+
+        self.display_team_roster()

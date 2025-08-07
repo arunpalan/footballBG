@@ -199,9 +199,9 @@ class Week:
 
     def play(self):
         if self.debug_mode:
-            print("Debug mode: Simulating a win for testing purposes.")
-            self.opponents[self.week_number]['result'] = "W 30-20"
-            return 1
+            print("Debug mode: Simulating a loss for testing purposes.")
+            self.opponents[self.week_number]['result'] = "L 30-20"
+            return 0
         
         off_tactic = self.simulation.tactics.get(self.off_strategy)
         def_tactic = self.simulation.tactics.get(self.def_strategy)

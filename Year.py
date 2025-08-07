@@ -17,6 +17,7 @@ class Year:
         self.players_per_free_agency = 3
         self.tactics_per_offseason = 5
         self.players_per_draft = 3
+        self.development_points = 3
 
         self.bye_threshold = 0.75
         self.playoff_threshold = 0.55
@@ -95,6 +96,10 @@ class Year:
 
     def handle_contracts(self):
         """Handle player contracts and salary cap."""
+
+        if not self.user_team_players:
+            return
+
         self.clear_console()
         print(f"\n--- Contract Management for Year {self.year_number} ---")
         total_salary = self.display_team_roster(display_attribute=False)
@@ -144,6 +149,59 @@ class Year:
         print(f"[Notice] Collected ${total_revenue} in revenue from fans.")
         input("\nPress Enter to continue...")
 
+    def develop_players(self):
+        """Develop players by spending development points."""
+
+        if not self.user_team_players:
+            return
+
+        self.clear_console()
+        print(f"\n--- Player Development for Year {self.year_number} ---")
+        print(f"You have {self.development_points} development points to spend.")
+
+        while self.development_points > 0:
+            self.display_team_roster()
+
+            for pid, player in enumerate(self.user_team_players, start=1):
+                print(f"{pid}. {player['player_name']}")
+
+            p_num = input("Enter the player number to develop (or 'done' to finish): ").strip()
+
+            if p_num.lower() == 'done':
+                break
+
+            player_id = self.user_team_players[int(p_num) - 1]['player_name']
+            player = self.simulation.players.get(player_id)
+            if not player:
+                print(f"Player ID {player_id} not found.")
+                continue
+
+            print(f"Developing player: {player['player_name']}")
+            print("Available attributes to develop:")
+            for attr in ['power run', 'spread', 'west coast', 'vertical', 'clutch']:
+                print(f"  {attr}: {player.get(attr, 0)}")
+
+            attr_to_develop = input("Enter the attribute to develop: ").strip()
+            if attr_to_develop not in player:
+                print(f"Attribute {attr_to_develop} not found.")
+                continue
+
+            development_amount = input("Enter the amount to develop (1-3): ").strip()
+            if not development_amount.isdigit() or not (1 <= int(development_amount) <= 3):
+                print("Invalid amount. Please enter a number between 1 and 3.")
+                continue
+
+            development_amount = int(development_amount)
+            if development_amount > self.development_points:
+                print(f"Not enough development points. You have {self.development_points} points left.")
+                continue
+
+            player[attr_to_develop] = int(player[attr_to_develop]) + development_amount
+            self.development_points -= development_amount
+            print(f"Developed {attr_to_develop} by {development_amount}. Remaining points: {self.development_points}")
+
+        input("\nPress Enter to continue...")
+
     def handle_offseason(self):
         """Handle offseason activities like adding players and tactics."""
         added_players = False
@@ -159,12 +217,13 @@ class Year:
             print("\nChoose an offseason activity:")
             print("1. Add Players")
             print("2. Add Tactics")
-            print("3. View Team Roster")
-            print("4. View Tactics")
-            print("5. View Schedule")
-            print("6. Exit Offseason")
+            print("3. Develop Players")
+            print("4. View Team Roster")
+            print("5. View Tactics")
+            print("6. View Schedule")
+            print("7. Exit Offseason")
 
-            choice = input("Enter your choice (1-6): ").strip() if not self.debug_mode else '6'
+            choice = input("Enter your choice (1-7): ").strip() #if not self.debug_mode else '7'
             if choice == '1':
                 if not added_players:
                     added_players = True
@@ -180,12 +239,14 @@ class Year:
                     print("You have already added tactics this offseason.")
 
             elif choice == '3':
-                self.display_team_roster()
+                self.develop_players()
             elif choice == '4':
-                self.display_tactics()
+                self.display_team_roster()
             elif choice == '5':
-                self.view_schedule()
+                self.display_tactics()
             elif choice == '6':
+                self.view_schedule()
+            elif choice == '7':
                 ready_to_proceed = True
             else:
                 print("Invalid choice, please try again.")
@@ -458,7 +519,7 @@ class Year:
             print("4. Change stadium")
             print("5. Exit Fan Engagement")
 
-            choice = input("Enter your choice (1-5): ").strip()
+            choice = input("Enter your choice (1-5): ").strip() if not self.debug_mode else '5'
             if choice == '1':
                 if performance_rating < 0:
                     print("You have no more performance points.")
@@ -518,12 +579,11 @@ class Year:
             }
 
     def display_team_roster(self, display_attribute=True):
-        self.clear_console()
-        """Show current players on your team with their attributes."""
+
         if not self.user_team_players:
-            print("\n📭 Your team has no players yet.")
-            input("\nPress Enter to continue...")
-            return 0
+            return None
+        
+        self.clear_console()
 
         print("\n📋 Your Team Roster:")
         for team_player in self.user_team_players:
@@ -615,6 +675,10 @@ class Year:
 
     def cut_players(self):
         """Command-line prompt to cut players from your team."""
+
+        if not self.user_team_players:
+            return 0
+
         team_cost = self.display_team_roster(display_attribute=False)
 
         if not self.user_team_players:
@@ -643,7 +707,7 @@ class Year:
         """Command-line prompt to add players from simulation."""        
         self.cut_players()
 
-        team_cost = self.display_team_roster()  # Step 1: Show team before selection
+        team_cost = self.display_team_roster() or 0  # Step 1: Show team before selection
 
         # Only show players not already on the team and greater than 0 salary
         eligible_players = [p for pid, p in self.simulation.players.items() if pid not in self.user_team_players and int(p.get('salary', 0)) > 0]
@@ -681,7 +745,7 @@ class Year:
             else:
                 print(f"[Skipped] Player {player_id} is already on your team.")
 
-        team_cost = self.display_team_roster()  # Step 2: Show team after updates
+        team_cost = self.display_team_roster() or 0  # Step 2: Show team after updates
         self.sim_stats['cash'] += (self.salary_cap - team_cost)
 
     def add_tactics(self):

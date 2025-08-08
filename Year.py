@@ -4,7 +4,7 @@ from Week import Week
 import os
 
 class Year:
-    def __init__(self, year_number, simulation, user_team_players, weeks_per_year, sim_stats, salary_cap, stadium, fans, strategies, sponsors, debug_mode):
+    def __init__(self, year_number, simulation, user_team_players, weeks_per_year, sim_stats, salary_cap, stadium, fans, strategies, coaches, staffers, sponsors, debug_mode):
         self.year_number = year_number
         self.simulation = simulation
         self.user_team_players = user_team_players
@@ -14,12 +14,15 @@ class Year:
         self.stadium = stadium
         self.fans = fans
         self.strategies = strategies
+        self.coaches = coaches
+        self.staffers = staffers
         self.sponsors = sponsors
         self.debug_mode = debug_mode
 
+        self.coach_carousel = 3
         self.players_per_free_agency = 3
-        self.strategies_per_season = 2
-        self.tactics_per_week = 1
+        self.strategies_per_offseason = 3
+        self.strategies_per_week = 1
         self.players_per_draft = 3
         self.development_points = 3
         self.max_sponsors = 1
@@ -34,7 +37,6 @@ class Year:
         self.current_week = None
         self.opponents = {}
         self.playoff_bracket = {}
-        self.tactics = []
 
     def run_events(self):
         """Placeholder for events like matches, drafts, injuries, etc."""
@@ -70,18 +72,18 @@ class Year:
             print(f"Cash available: ${self.sim_stats['cash']}")
             print("\nChoose an activity:")
             print("1. View Team Roster")
-            print("2. View Tactics")
+            print("2. View Strategies")
             print("3. View Schedule")
             print("4. Play Match")
             choice = input("Enter your choice (1-4): ").strip() if not self.debug_mode else '4'
             if choice == '1':
                 self.display_team_roster()  
             elif choice == '2':
-                self.display_tactics()
+                self.display_strategies()
             elif choice == '3':
                 self.view_schedule()
             elif choice == '4':
-                self.current_week = Week(self.week_number, self.simulation, self.user_team_players, self.opponents, self.tactics, self.debug_mode)
+                self.current_week = Week(self.week_number, self.simulation, self.user_team_players, self.opponents, self.strategies, self.debug_mode)
                 win = self.current_week.run_events()
                 self.wins += win
                 self.week_number += 1
@@ -226,10 +228,126 @@ class Year:
 
         input("\nPress Enter to continue...")
 
+    def replace_head_coach(self):
+        self.clear_console()
+        eligible_coaches = [c for c in self.simulation.coaches.values() if c['type'] == 'coach' and c['name'] != self.coaches[0] and int(c['salary']) > 0]
+        if not eligible_coaches:
+            print("No other coaches available to hire.")
+            input("\nPress Enter to continue...")
+            return
+        options = random.sample(eligible_coaches, k=min(self.coach_carousel, len(eligible_coaches)))
+        print("Available Coaches:")
+        for i, coach in enumerate(options, start=1):
+            print(f"  {i}. {coach['name']}")
+            for key, value in coach.items():
+                print(f"    {key}: {value}")
+
+        print(f"Available Cash: ${self.sim_stats['cash']}")
+
+        choice = input("Enter the number of the coach to hire: ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(options):
+            if int(self.sim_stats['cash']) < int(options[int(choice) - 1]['salary']):
+                print("You do not have enough cash to hire this coach.")
+                input("\nPress Enter to continue...")
+                return
+            new_coach = options[int(choice) - 1]['name']
+            self.coaches[0] = new_coach
+            print(f"[Update] Head Coach changed to {new_coach}.")
+
+    def add_staffer(self):
+        eligible_staffers = [c for c in self.simulation.coaches.values() if c['type'] == 'staffer']
+        if not eligible_staffers:
+            print("No staffers available to hire.")
+            input("\nPress Enter to continue...")
+            return
+        
+        print("\nAvailable Staffers:")
+        for idx, staffer in enumerate(eligible_staffers, start=1):
+            print(f"{idx}. {staffer['name']}")
+            for key, value in staffer.items():
+                print(f"  {key}: {value}")
+
+        print(f"Available Cash: ${self.sim_stats['cash']}")
+        choices = input("Enter the indices of the staffer(s) to hire: ").strip()
+        if choices:
+            indices = choices.split(',')
+            for index in indices:
+                if index.isdigit() and 1 <= int(index) <= len(eligible_staffers):
+                    staffer = eligible_staffers[int(index) - 1]
+                    if int(self.sim_stats['cash']) < int(staffer['salary']):
+                        print(f"You do not have enough cash to hire {staffer['name']}.")
+                        continue
+                    self.staffers.append(staffer['name'])
+                    self.sim_stats['cash'] = int(self.sim_stats['cash']) - int(staffer['salary'])
+                    print(f"[Update] Staffer {staffer['name']} has been hired.")
+                else:
+                    print(f"Invalid choice: {index}. Please enter a valid index.")
+
+    def view_staff(self):
+        """View current staff including head coach and staffers."""
+
+        if not self.coaches and not self.staffers:
+            return 
+        
+        print(f"\n--- Current Staff for Year {self.year_number} ---")
+        
+        if not self.coaches:
+            print("No coaches hired yet.")
+            return
+        
+        print(f"Head Coach: {self.coaches[0]}")
+        for key, value in self.simulation.coaches.get(self.coaches[0], {}).items():
+            print(f"  {key}: {value}")
+        for staffer in self.staffers:
+            print(f"Staffer: {staffer}")
+            for key, value in self.simulation.coaches.get(staffer, {}).items():
+                print(f"  {key}: {value}")
+
+        input("\nPress Enter to continue...")
+
+    def manage_coaches(self):
+        """Manage coaches for the team."""
+        self.clear_console()
+        print(f"\n--- Coach Management for Year {self.year_number} ---")
+        
+        coach = self.simulation.coaches.get(self.coaches[0], {})
+        if int(coach['salary']) > self.sim_stats['cash']:
+            self.coach = ['Base Coach']
+            print("You do not have enough cash for current coach, replacing with Base Coach.")
+
+        self.view_staff()
+
+        ready_to_proceed = False
+        while not ready_to_proceed:
+            self.clear_console()
+            print(f"\n--- Coach Management for Year {self.year_number} ---")
+            print("Choose an action:")
+            print("1. View Current Staff")
+            print("2. Hire New Head Coach")
+            print("3. Add Staffer")
+            print("4. Exit Coach Management")
+
+            choice = input("Enter your choice (1-4): ").strip() #if not self.debug_mode else '4'
+            if choice == '1':
+                self.view_staff()
+            elif choice == '2':
+                self.replace_head_coach()
+            elif choice == '3':
+                self.add_staffer()
+            elif choice == '4':
+                ready_to_proceed = True
+            else:
+                print("Invalid choice, please try again.")
+
+        self.sim_stats['cash'] = int(self.sim_stats['cash']) - int(self.simulation.coaches.get(self.coaches[0], {}).get('salary', 0))
+
+        input("\nPress Enter to continue...")
+
     def handle_offseason(self):
-        """Handle offseason activities like adding players and tactics."""
+        """Handle offseason activities like adding players and strategies."""
         added_players = False
-        added_tactics = False
+        managed_coaches = False
+        added_strategies = False
         ready_to_proceed = False
         self.collect_revenue()
         self.handle_sponsors()
@@ -241,37 +359,45 @@ class Year:
             print(f"\n--- Offseason Activities for Year {self.year_number} ---")
             print("\nChoose an offseason activity:")
             print("1. Add Players")
-            print("2. Add Tactics")
-            print("3. Develop Players")
-            print("4. View Team Roster")
-            print("5. View Tactics")
-            print("6. View Schedule")
-            print("7. Exit Offseason")
+            print("2. Manage Coaches")
+            print("3. Manage Strategies")
+            print("4. Develop Players")
+            print("5. View Team Roster")
+            print("6. View Strategies")
+            print("7. View Schedule")
+            print("8. Exit Offseason")
 
-            choice = input("Enter your choice (1-7): ").strip() #if not self.debug_mode else '7'
+            choice = input("Enter your choice (1-8): ").strip() #if not self.debug_mode else '8'
             if choice == '1':
                 if not added_players:
                     added_players = True
                     self.add_players()
                 else:
                     print("You have already added players this offseason.")
-                
+                    input("Press enter to continue...")
             elif choice == '2':
-                if not added_tactics:
-                    added_tactics = True
-                    self.add_tactics()
+                if not managed_coaches:
+                    managed_coaches = True
+                    self.manage_coaches()
                 else:
-                    print("You have already added tactics this offseason.")
-
+                    print("You have already managed coaches offseason.")
+                    input("Press enter to continue...")
             elif choice == '3':
-                self.develop_players()
+                if not added_strategies:
+                    added_strategies = True
+                    self.add_strategies()
+                else:
+                    print("You have already added strategies this offseason")
+                    input("Press enter to continue...")
             elif choice == '4':
-                self.display_team_roster()
+                self.develop_players()
             elif choice == '5':
-                self.display_tactics()
+                self.manage_coaches()
             elif choice == '6':
-                self.view_schedule()
+                self.display_strategies()
             elif choice == '7':
+                self.view_schedule()
+            elif choice == '8':
                 ready_to_proceed = True
             else:
                 print("Invalid choice, please try again.")
@@ -317,14 +443,14 @@ class Year:
             print(f"\n--- Playoff Round: {self.playoff_bracket[playoff_round]['name']} ---")
             print("\nChoose an activity:")
             print("1. View Team Roster")
-            print("2. View Tactics")
+            print("2. View Strategies")
             print("3. View Playoff Bracket")
             print("4. Play Playoff Game")
             choice = input("Enter your choice (1-4): ").strip() if not self.debug_mode else '4'
             if choice == '1':
                 self.display_team_roster()
             elif choice == '2':
-                self.display_tactics()
+                self.display_strategies()
             elif choice == '3':
                 view_playoff_bracket()
             elif choice == '4':
@@ -332,7 +458,7 @@ class Year:
                 # You can customize opponent logic as needed
                 print("\nPlaying playoff game...")
 
-                self.current_week = Week(playoff_round, self.simulation, self.user_team_players, self.playoff_bracket, self.tactics, self.debug_mode)
+                self.current_week = Week(playoff_round, self.simulation, self.user_team_players, self.playoff_bracket, self.strategies, self.debug_mode)
                 win = self.current_week.run_events()
 
                 if win < 0.5:
@@ -659,22 +785,19 @@ class Year:
 
         return total_salary
 
-    def display_tactics(self):
-        self.clear_console()
-        if not self.tactics:
-            print("\n📭 You have no tactics yet.")
-            input("\nPress Enter to continue...")
+    def display_strategies(self):
+        if not self.strategies:
             return
+        
+        self.clear_console()
 
-        print("\n📋 Your Current Tactics:")
-        for tid in self.tactics:
-            tactic = self.simulation.tactics.get(tid)
-            if tactic:
-                print(f"\Tactic ID: {tid}")
-                for key, value in tactic.items():
+        print("\n📋 Your Current Strategies:")
+        for tid in self.strategies:
+            strategy = self.simulation.strategies.get(tid)
+            if strategy:
+                print(f"\Strategy Name: {tid}")
+                for key, value in strategy.items():
                     print(f"  {key}: {value}")
-            else:
-                print(f"⚠️ Tactic ID {tid} not found in simulation database.")
 
         input("\nPress Enter to continue...")
     
@@ -775,37 +898,37 @@ class Year:
         team_cost = self.display_team_roster() or 0  # Step 2: Show team after updates
         self.sim_stats['cash'] += (self.salary_cap - team_cost)
 
-    def add_tactics(self):
-        self.display_tactics()
+    def add_strategies(self):
+        self.display_strategies()
 
-        eligible_tactics = [t for tid, t in self.simulation.tactics.items() if tid not in self.tactics]
+        eligible_strategies = [t for tid, t in self.simulation.strategies.items() if tid not in self.strategies]
 
-        if len(eligible_tactics) < self.tactics_per_offseason:
-            print("[Notice] Not enough eligible tactics to show 3 choices.")
+        if len(eligible_strategies) < self.strategies_per_offseason:
+            print("[Notice] Not enough eligible strategies.")
             return
 
-        options = random.sample(eligible_tactics, k=self.tactics_per_offseason)
+        options = random.sample(eligible_strategies, k=self.strategies_per_offseason)
 
         self.clear_console()
-        print("\n🎯 Choose a tactic to add to your team:")
-        for idx, tactic in enumerate(options, start=1):
-            print(f"\Tactic {idx}:")
-            for key, value in tactic.items():
+        print("\n🎯 Choose a strategy to add to your team:")
+        for idx, strategy in enumerate(options, start=1):
+            print(f"\Strategy {idx}:")
+            for key, value in strategy.items():
                 print(f"  {key}: {value}")
 
-        print("\nEnter the number(s) of the tactic(s) you want to add (e.g. 1 or 1,3):")
+        print("\nEnter the number(s) of the strategies you want to add (e.g. 1 or 1,3):")
         choice = input(">> ").strip()
-        selected_indices = {int(i) for i in choice.split(",") if i.isdigit() and 1 <= int(i) <= self.tactics_per_offseason}
+        selected_indices = {int(i) for i in choice.split(",") if i.isdigit() and 1 <= int(i) <= self.strategies_per_offseason}
 
         for i in selected_indices:
-            tactic_id = options[i - 1]['tactic_name']
-            if tactic_id not in self.tactics:
-                self.tactics.append(tactic_id)
-                print(f"[Added] Tactic {tactic_id} to your team!")
+            strategy_id = options[i - 1]['name']
+            if strategy_id not in self.strategies:
+                self.strategies.append(strategy_id)
+                print(f"[Added] Strategy {strategy_id} to your team!")
             else:
-                print(f"[Skipped] Tactic {tactic_id} is already on your team.")
+                print(f"[Skipped] Strategy {strategy_id} is already on your team.")
 
-        self.display_tactics()  # Step 2: Show team after updates
+        self.display_strategies()  # Step 2: Show team after updates
 
     def draft_players(self):
         self.clear_console()

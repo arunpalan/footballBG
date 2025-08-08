@@ -2,18 +2,16 @@ import random
 import os 
 
 class Week:
-    def __init__(self, week_number, simulation, user_team_players, opponents, tactics, debug_mode=False):
+    def __init__(self, week_number, simulation, user_team_players, opponents, strategies, debug_mode=False):
         self.week_number = week_number
         self.simulation = simulation
         self.user_team_players = user_team_players
         self.opponents = opponents
-        self.tactics = tactics
+        self.strategies = strategies
         self.debug_mode = debug_mode
 
         self.off_strategy = None
         self.def_strategy = None
-        self.off_tactics = []
-        self.def_tactics = []
 
     def run_events(self):
         print(f"Running events for Week {self.week_number}...")
@@ -85,19 +83,19 @@ class Week:
         for key, value in opponent.items():
             print(f"  {key}: {value}")
 
-    def display_tactics(self):
-        if not self.tactics:
+    def display_strategies(self):
+        if not self.strategies:
             return
 
-        print("\n📋 Your Current Tactics:")
-        for tid in self.tactics:
-            tactic = self.simulation.tactics.get(tid)
-            if tactic:
-                print(f"\Tactic ID: {tid}")
-                for key, value in tactic.items():
+        print("\n📋 Your Current Strategies:")
+        for tid in self.strategies:
+            strategy = self.simulation.strategy.get(tid)
+            if strategy:
+                print(f"\Strategy ID: {tid}")
+                for key, value in strategy.items():
                     print(f"  {key}: {value}")
             else:
-                print(f"⚠️ Tactic ID {tid} not found in simulation database.")
+                print(f"⚠️ Strategy ID {tid} not found in simulation database.")
 
     def gameplan(self):
         self.display_next_opponent()
@@ -105,97 +103,57 @@ class Week:
         if self.debug_mode:
             self.off_strategy = 'strat1'
             self.def_strategy = 'defstrat1'
-            self.off_tactics = []
-            self.def_tactics = []
             return
 
-        tactic_selected = False
+        strategy_selected = False
 
-        while not tactic_selected:
+        while not strategy_selected:
             self.off_strategy = None
             self.def_strategy = None
-            self.off_tactics = []
-            self.def_tactics = []
 
             self.clear_console()
             print("\nSelect an offensive strategy: ")
 
-            for idx, tid in enumerate(self.tactics, start=1):
-                print(f"\Tactic {idx}:")
-                tactic = self.simulation.tactics.get(tid)
-                for key, value in tactic.items():
+            for idx, tid in enumerate(self.strategies, start=1):
+                print(f"\Strategy {idx}:")
+                strategy = self.simulation.strategies.get(tid)
+                for key, value in strategy.items():
                     print(f"  {key}: {value}")
 
             print("\nEnter the number next to the strategy you would like to select: ")
             choice = input(">> ").strip()
 
-            chosen_tactic = self.simulation.tactics.get(self.tactics[int(choice)-1])
-            if chosen_tactic['side'] != 'offense':
+            chosen_strategy = self.simulation.strategies.get(self.strategies[int(choice)-1])
+            if chosen_strategy['side'] != 'offense':
                 print("\nDefensive strategy selected, try again")
                 continue
-            if chosen_tactic['type'] != 'strategy':
+            if chosen_strategy['type'] != 'strategy':
                 print("\nTactic selected instead of strategy, try again")
 
-            self.off_strategy = self.tactics[int(choice)-1]
+            self.off_strategy = self.strategies[int(choice)-1]
 
             self.clear_console()
             print("\nSelect a defensive strategy: ")
 
-            for idx, tid in enumerate(self.tactics, start=1):
-                print(f"\Tactic {idx}:")
-                tactic = self.simulation.tactics.get(tid)
-                for key, value in tactic.items():
+            for idx, tid in enumerate(self.strategies, start=1):
+                print(f"\Strategy {idx}:")
+                strategy = self.simulation.strategies.get(tid)
+                for key, value in strategy.items():
                     print(f"  {key}: {value}")
 
             print("\nEnter the number next to the strategy you would like to select: ")
             choice = input(">> ").strip()
 
-            chosen_tactic = self.simulation.tactics.get(self.tactics[int(choice)-1])
-            if chosen_tactic['side'] != 'defense':
+            chosen_strategy = self.simulation.strategies.get(self.strategies[int(choice)-1])
+            if chosen_strategy['side'] != 'defense':
                 print("\Offensive strategy selected, try again")
                 continue
-            if chosen_tactic['type'] != 'strategy':
+            if chosen_strategy['type'] != 'strategy':
                 print("\nTactic selected instead of strategy, try again")
 
-            self.def_strategy = self.tactics[int(choice)-1]
-            
-            self.clear_console()
-            print("\nSelect any offensive tactics: ")
+            self.def_strategy = self.strategies[int(choice)-1]
 
-            for idx, tid in enumerate(self.tactics, start=1):
-                print(f"\Tactic {idx}:")
-                tactic = self.simulation.tactics.get(tid)
-                for key, value in tactic.items():
-                    print(f"  {key}: {value}")
-
-            print("\nEnter the number(s) next to the strategy you would like to select (e.g. 1 or 1,3): ")
-            choice = input(">> ").strip()
-            selected_indices = {int(i) for i in choice.split(",") if i.isdigit()}
-
-            for i in selected_indices:
-                chosen_tactic = self.simulation.tactics.get(self.tactics[i-1])
-                if chosen_tactic['side'] == 'offense' and chosen_tactic['type'] == 'tactic':
-                    self.off_tactics.append(self.tactics[i-1])
-
-            self.clear_console()
-            print("\nSelect any defensive tactics: ")
-
-            for idx, tid in enumerate(self.tactics, start=1):
-                print(f"\Tactic {idx}:")
-                tactic = self.simulation.tactics.get(tid)
-                for key, value in tactic.items():
-                    print(f"  {key}: {value}")
-
-            print("\nEnter the number(s) next to the strategy you would like to select (e.g. 1 or 1,3): ")
-            choice = input(">> ").strip()
-            selected_indices = {int(i) for i in choice.split(",") if i.isdigit()}
-
-            for i in selected_indices:
-                chosen_tactic = self.simulation.tactics.get(self.tactics[i-1])
-                if chosen_tactic['side'] == 'defense' and chosen_tactic['type'] == 'tactic':
-                    self.def_tactics.append(self.tactics[i-1])
-
-            tactic_selected = True
+            strategy_selected = True
 
     def play(self):
         if self.debug_mode:
@@ -203,21 +161,14 @@ class Week:
             self.opponents[self.week_number]['result'] = "L 30-20"
             return 0
         
-        off_tactic = self.simulation.tactics.get(self.off_strategy)
-        def_tactic = self.simulation.tactics.get(self.def_strategy)
-        off_arch = off_tactic['arch']
+        off_strategy = self.simulation.strategies.get(self.off_strategy)
+        def_strategy = self.simulation.strategies.get(self.def_strategy)
+        off_arch = off_strategy['arch']
         opponent = self.opponents[self.week_number]['team']
         def_arch = opponent['arch']
 
-        off_rat = int(off_tactic['bonus'])
-        def_rat = int(def_tactic['bonus'])
-
-        for tid in self.off_tactics:
-            tactic = self.simulation.tactics.get(tid)
-            if tactic['side'] == 'offense' and tactic['arch'] == off_arch:
-                off_rat += int(tactic['bonus'])
-            elif tactic['side'] == 'defense' and tactic['arch'] == def_arch:
-                def_rat += int(tactic['bonus'])
+        off_rat = int(off_strategy['bonus'])
+        def_rat = int(def_strategy['bonus'])
 
         for team_player in self.user_team_players:
             pid = team_player.get('player_name')
@@ -232,8 +183,8 @@ class Week:
 
         if off_rat == opp_def and def_rat == opp_off:
             clutch = 1
-            clutch += int(off_tactic['clutch'])
-            clutch += int(def_tactic['clutch'])
+            clutch += int(off_strategy['clutch'])
+            clutch += int(def_strategy['clutch'])
             for team_player in self.user_team_players:
                 pid = team_player.get('player_name')
                 player = self.simulation.players.get(pid)
@@ -269,8 +220,8 @@ class Week:
             return 0
         else:
             clutch = 1
-            clutch += int(off_tactic['clutch'])
-            clutch += int(def_tactic['clutch'])
+            clutch += int(off_strategy['clutch'])
+            clutch += int(def_strategy['clutch'])
             for team_player in self.user_team_players:
                 pid = team_player.get('player_name')
                 player = self.simulation.players.get(pid)

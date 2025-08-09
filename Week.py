@@ -2,16 +2,18 @@ import random
 import os 
 
 class Week:
-    def __init__(self, week_number, simulation, user_team_players, opponents, strategies, debug_mode=False):
+    def __init__(self, week_number, simulation, user_team_players, opponents, strategies, tactics_per_week, debug_mode=False):
         self.week_number = week_number
         self.simulation = simulation
         self.user_team_players = user_team_players
         self.opponents = opponents
         self.strategies = strategies
+        self.tactics_per_week = 0
         self.debug_mode = debug_mode
 
         self.off_strategy = None
         self.def_strategy = None
+        self.tactics = []
 
     def run_events(self):
         print(f"Running events for Week {self.week_number}...")
@@ -97,14 +99,7 @@ class Week:
             else:
                 print(f"⚠️ Strategy ID {tid} not found in simulation database.")
 
-    def gameplan(self):
-        self.display_next_opponent()
-
-        if self.debug_mode:
-            self.off_strategy = 'strat1'
-            self.def_strategy = 'defstrat1'
-            return
-
+    def select_strategy(self):
         strategy_selected = False
 
         while not strategy_selected:
@@ -127,8 +122,6 @@ class Week:
             if chosen_strategy['side'] != 'offense':
                 print("\nDefensive strategy selected, try again")
                 continue
-            if chosen_strategy['type'] != 'strategy':
-                print("\nTactic selected instead of strategy, try again")
 
             self.off_strategy = self.strategies[int(choice)-1]
 
@@ -148,12 +141,37 @@ class Week:
             if chosen_strategy['side'] != 'defense':
                 print("\Offensive strategy selected, try again")
                 continue
-            if chosen_strategy['type'] != 'strategy':
-                print("\nTactic selected instead of strategy, try again")
 
             self.def_strategy = self.strategies[int(choice)-1]
 
             strategy_selected = True
+
+    def select_tactics(self):
+        if self.tactics_per_week < 1:
+            return
+        
+        eligible_tactics = [t for t in self.simulation.tactics]
+        options = random.sample(eligible_tactics, k=min(self.tactics_per_week, len(eligible_tactics)))
+
+        for i, tactic in enumerate(options, start=1):
+            print(f"  {i}. {tactic['name']}")
+            for key, value in tactic.items():
+                print(f"    {key}: {value}")
+
+        choice = input("Enter the number of the tactic to use: ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(options):
+            self.tactics.append(options[int(choice) - 1]['name'])
+
+    def gameplan(self):
+        self.display_next_opponent()
+
+        if self.debug_mode:
+            self.off_strategy = 'strat1'
+            self.def_strategy = 'defstrat1'
+            return
+        
+        self.select_tactics()
+        self.select_strategy()
 
     def play(self):
         if self.debug_mode:
@@ -170,6 +188,13 @@ class Week:
         off_rat = int(off_strategy['bonus'])
         def_rat = int(def_strategy['bonus'])
 
+        for tactic_id in self.tactics:
+            tactic = self.simulation.tactics.get(pid)
+            if tactic['side'] == 'offense':
+                off_rat += int(tactic['bonus'])
+            if tactic['side'] == 'defense':
+                def_rat += int(tactic['bonus'])
+
         for team_player in self.user_team_players:
             pid = team_player.get('player_name')
             player = self.simulation.players.get(pid)
@@ -185,6 +210,11 @@ class Week:
             clutch = 1
             clutch += int(off_strategy['clutch'])
             clutch += int(def_strategy['clutch'])
+
+            for tactic_id in self.tactics:
+                tactic = self.simulation.tactics.get(pid)
+                clutch += int(tactic['clutch'])
+
             for team_player in self.user_team_players:
                 pid = team_player.get('player_name')
                 player = self.simulation.players.get(pid)

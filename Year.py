@@ -21,12 +21,15 @@ class Year:
 
         self.coach_carousel = 3
         self.players_per_free_agency = 3
+        self.trades_per_year = 1
+        self.players_per_trade = 3
         self.strategies_per_offseason = 3
         self.tactics_per_week = 0
         self.strategies_per_week = 1
         self.players_per_draft = 3
         self.development_points = 3
         self.max_sponsors = 1
+        self.national_revenue = 5
 
         self.bye_threshold = 0.75
         self.playoff_threshold = 0.55
@@ -75,8 +78,9 @@ class Year:
             print("1. View Team Roster")
             print("2. View Strategies")
             print("3. View Schedule")
-            print("4. Play Match")
-            choice = input("Enter your choice (1-4): ").strip() if not self.debug_mode else '4'
+            print("4. Make a Trade")
+            print("5. Play Match")
+            choice = input("Enter your choice (1-5): ").strip() if not self.debug_mode else '5'
             if choice == '1':
                 self.display_team_roster()  
             elif choice == '2':
@@ -84,6 +88,12 @@ class Year:
             elif choice == '3':
                 self.view_schedule()
             elif choice == '4':
+                if self.trades_per_year < 1:
+                    print("You have already made the maximum number of trades this year.")
+                    continue
+                self.make_trade()
+                self.trades_per_year -= 1
+            elif choice == '5':
                 self.current_week = Week(self.week_number, self.simulation, self.user_team_players, self.opponents, self.strategies, self.tactics_per_week, self.debug_mode)
                 win = self.current_week.run_events()
                 self.wins += win
@@ -137,12 +147,6 @@ class Year:
         for player in cutlist:
             self.user_team_players.remove(player)
 
-        if total_salary > self.salary_cap:
-            print(f"[Warning] Your team salary exceeds the salary cap of ${self.salary_cap}.")
-            print("You will need to cut players to stay under the cap.")
-            while total_salary > self.salary_cap:
-                total_salary = self.cut_players()
-
         input("\nPress Enter to continue...")
 
     def handle_sponsors(self):
@@ -166,14 +170,14 @@ class Year:
 
     def collect_revenue(self):
         """Collect revenue from fans based on their type."""
-        total_revenue = 0
+        total_revenue = self.national_revenue
 
         for fan_id in self.fans:
             fan = self.simulation.fans.get(fan_id)
             total_revenue += int(fan['revenue'])
 
         self.sim_stats['cash'] += total_revenue
-        print(f"[Notice] Collected ${total_revenue} in revenue from fans.")
+        print(f"[Notice] Collected ${total_revenue} in revenue from national revenue and fans.")
         input("\nPress Enter to continue...")
 
     def develop_players(self):
@@ -191,8 +195,8 @@ class Year:
         for staffer_id in self.staffers:
             staffer = self.simulation.coaches.get(staffer_id,{})
             if int(staffer['development']) > 0:
-                input = print(f"Would you like to use {staffer_id} this year for {staffer['development']} development points? (y/n)")
-                if input == 'y':
+                choice = print(f"Would you like to use {staffer_id} this year for {staffer['development']} development points? (y/n)")
+                if choice == 'y':
                     dev_points += int(staffer['development'])
                     self.staffers.remove(staffer_id)
 
@@ -324,11 +328,6 @@ class Year:
         """Manage coaches for the team."""
         self.clear_console()
         print(f"\n--- Coach Management for Year {self.year_number} ---")
-        
-        coach = self.simulation.coaches.get(self.coaches[0], {})
-        if int(coach['salary']) > self.sim_stats['cash']:
-            self.coach = ['Base Coach']
-            print("You do not have enough cash for current coach, replacing with Base Coach.")
 
         self.view_staff()
 
@@ -354,7 +353,12 @@ class Year:
             else:
                 print("Invalid choice, please try again.")
 
-        self.sim_stats['cash'] = int(self.sim_stats['cash']) - int(self.simulation.coaches.get(self.coaches[0], {}).get('salary', 0))
+        coach = self.simulation.coaches.get(self.coaches[0], {})
+        if int(coach['salary']) > self.sim_stats['cash']:
+            self.coach = ['Base Coach']
+            print("You do not have enough cash for current coach, replacing with Base Coach.")
+
+        self.sim_stats['cash'] = int(self.sim_stats['cash']) - int(coach.get('salary', 0))
 
         input("\nPress Enter to continue...")
 
@@ -366,8 +370,8 @@ class Year:
         for staffer_id in self.staffers:
             staffer = self.simulation.coaches.get(staffer_id,{})
             if int(staffer['tactics']) > 0:
-                input = print(f"Would you like to use {staffer_id} this year for {staffer['tactic']} tactics points? (y/n)")
-                if input == 'y':
+                choice = print(f"Would you like to use {staffer_id} this year for {staffer['tactic']} tactics points? (y/n)")
+                if choice == 'y':
                     self.tactics_per_week += int(staffer['recruiting'])
                     self.staffers.remove(staffer_id)
 
@@ -421,7 +425,7 @@ class Year:
             elif choice == '4':
                 self.develop_players()
             elif choice == '5':
-                self.manage_coaches()
+                self.display_team_roster()
             elif choice == '6':
                 self.display_strategies()
             elif choice == '7':
@@ -445,7 +449,7 @@ class Year:
             input("\nPress Enter to continue...")
             return
         
-        has_bye = win_pct >= self
+        has_bye = win_pct >= self.bye_threshold
         games_needed = 3 if has_bye else 4
 
         playoff_round = 1 if not has_bye else 2  # Start at Divisional if bye
@@ -864,7 +868,7 @@ class Year:
             print("[Notice] Your team has no players to cut.")
             return team_cost
         
-        print(f"\nCurrent Team Cost: ${team_cost} and Salary Cap: ${self.salary_cap}")
+        print(f"\nCurrent Team Cost: ${team_cost}, Salary Cap: ${self.salary_cap}, and Cash on Hand: ${self.sim_stats['cash']}")
         print("\nEnter the number(s) of the player(s) you want to cut (e.g. 1 or 1,3):")
         choice = input(">> ").strip()
         selected_indices = {int(i) for i in choice.split(",") if i.isdigit() and 1 <= int(i) <= len(self.user_team_players)}
@@ -873,18 +877,99 @@ class Year:
             print("[Notice] No valid player IDs selected.")
             return team_cost
         for pid in selected_indices:
-            pid = self.user_team_players[pid - 1]  # Convert to actual player
-            self.user_team_players.remove(pid)
-            team_cost = self.display_team_roster(display_attribute=False)
-            return team_cost
+            player_id = self.user_team_players[pid - 1]  # Convert to actual player
+            self.user_team_players.remove(player_id)
+            
+        team_cost = self.display_team_roster(display_attribute=False)
+        return team_cost
 
     def player_name_exists(self, player_name): 
         """Check if a player_name exists in user_team_players."""
         return any(player.get('player_name') == player_name for player in self.user_team_players)
 
+    def make_trade(self):
+        """Command-line prompt to make trades with other teams."""
+        self.clear_console()
+        print(f"\n--- Trade Management for Year {self.year_number} ---")
+
+        if not self.user_team_players:
+            print("[Notice] Your team has no players to trade.")
+            input("\nPress Enter to continue...")
+            return
+
+        eligible_players = [p for pid, p in self.simulation.players.items() if pid not in self.user_team_players and int(p.get('salary', 0)) > 0]
+        
+        if not eligible_players:
+            print("[Notice] No eligible players available for trade.")
+            input("\nPress Enter to continue...")
+            return
+        
+        options = random.sample(eligible_players, k=min(self.players_per_trade, len(eligible_players)))
+        
+        print("\nAvailable Players for Trade:")
+        for idx, player in enumerate(options, start=1):
+            print(f"\nPlayer {idx}:")
+            for key, value in player.items():
+                print(f"  {key}: {value}")
+                
+        print("\nEnter the number of the player you want to trade for:")
+        choice = input(">> ").strip()
+        
+        if choice.isdigit() and 1 <= int(choice) <= len(options):
+            
+            trade_complete = False
+            
+            while not trade_complete:
+                print("\nSelect player(s) from your team to trade away:")
+                for idx, team_player in enumerate(self.user_team_players, start=1):
+                    pid = team_player.get('player_name')
+                    player = self.simulation.players.get(pid)
+                    if player:
+                        print(f"\nPlayer {idx}:")
+                        for key, value in player.items():
+                            print(f"  {key}: {value}")
+                    else:
+                        print(f"⚠️ Player ID {pid} not found in simulation database.")
+                        
+                trade_choice = input("Enter the number(s) of the player(s) to trade away (e.g. 1 or 1,3): ").strip()
+                selected_trade_indices = {int(i) for i in trade_choice.split(",") if i.isdigit() and 1 <= int(i) <= len(self.user_team_players)}
+
+                print(f"\nCurrent Cash on Hand: ${self.sim_stats['cash']}")
+                added_money = int(input("Enter any additional money you want to include in the trade (positive) or ask for in exchange (negative): ").strip())
+
+                if added_money > int(self.sim_stats['cash']):
+                    print(f"[Error] Only ${self.sim_stats['cash']} available on hand.")
+                    continue
+
+                cumulative_salary = sum(int(self.simulation.players.get(self.user_team_players[i - 1].get('player_name'), {}).get('salary', 0)) for i in selected_trade_indices)
+                
+                if added_money + cumulative_salary < int(options[int(choice) - 1].get('salary', 0)):
+                    print("[Error] Trade offer was rejected.")
+                    continue
+                
+                # Execute trade
+                new_player = {
+                    'player_name': options[int(choice) - 1]['player_name'],
+                    'contract': 2
+                }
+                self.user_team_players.append(new_player)
+                
+                for i in selected_trade_indices:
+                    pid = self.user_team_players[i - 1]  # Convert to actual player
+                    self.user_team_players.remove(pid)
+                
+                self.sim_stats['cash'] = int(self.sim_stats['cash']) - added_money
+                
+                print(f"[Success] Trade completed! You acquired {new_player['player_name']}.")
+                trade_complete = True
+        else:
+            print("[Error] Invalid choice for player to trade for.")
+        
+        input("\nPress Enter to continue...")
+
     def add_players(self):
         """Command-line prompt to add players from simulation."""        
-        self.cut_players()
+        #self.cut_players()
 
         team_cost = self.display_team_roster() or 0  # Step 1: Show team before selection
 
@@ -899,8 +984,8 @@ class Year:
         for staffer_id in self.staffers:
             staffer = self.simulation.coaches.get(staffer_id,{})
             if int(staffer['recruiting']) > 0:
-                input = print(f"Would you like to use {staffer_id} this offseason for {staffer['recruiting']} recruiting points? (y/n)")
-                if input == 'y':
+                choice = print(f"Would you like to use {staffer_id} this offseason for {staffer['recruiting']} recruiting points? (y/n)")
+                if choice == 'y':
                     recruit_ct += int(staffer['recruiting'])
                     self.staffers.remove(staffer_id)
 
@@ -928,6 +1013,10 @@ class Year:
                     print(f"[Skipped] Adding {player_id} would exceed salary cap.")
                     input("Press Enter to continue")
                     continue
+                if team_cost + int(options[i - 1].get('salary', 0)) > int(self.sim_stats['cash']):
+                    print(f"[Skipped] Adding {player_id} would exceed money on hand.")
+                    input("Press Enter to continue")
+                    continue
                 player = {
                     'player_name': player_id,
                     'contract': 2
@@ -938,7 +1027,13 @@ class Year:
                 print(f"[Skipped] Player {player_id} is already on your team.")
 
         team_cost = self.display_team_roster() or 0  # Step 2: Show team after updates
-        self.sim_stats['cash'] += (self.salary_cap - team_cost)
+        
+        if team_cost > self.salary_cap or team_cost > int(self.sim_stats['cash']):
+            print(f"[Warning] Your team salary exceeds the salary cap of ${self.salary_cap} or cash on hand of ${self.sim_stats['cash']}.")
+            print("You will need to cut players to stay under the cap.")
+            while team_cost > self.salary_cap or team_cost > int(self.sim_stats['cash']):
+                team_cost = self.cut_players()
+        self.sim_stats['cash'] = int(self.sim_stats['cash']) - team_cost
 
     def add_strategies(self):
         self.display_strategies()
@@ -1001,8 +1096,8 @@ class Year:
         for staffer_id in self.staffers:
             staffer = self.simulation.coaches.get(staffer_id,{})
             if int(staffer['drafting']) > 0:
-                input = print(f"Would you like to use {staffer_id} this year for {staffer['drafting']} drafting points? (y/n)")
-                if input == 'y':
+                choice = print(f"Would you like to use {staffer_id} this year for {staffer['drafting']} drafting points? (y/n)")
+                if choice == 'y':
                     draft_ct += int(staffer['drafting'])
                     self.staffers.remove(staffer_id)
 
@@ -1045,8 +1140,8 @@ class Year:
         for staffer_id in self.staffers:
             staffer = self.simulation.coaches.get(staffer_id,{})
             if int(staffer['fundraising']) > 0:
-                input = print(f"Would you like to use {staffer_id} this year for {staffer['fundraising']} fundraising points? (y/n)")
-                if input == 'y':
+                choice = print(f"Would you like to use {staffer_id} this year for {staffer['fundraising']} fundraising points? (y/n)")
+                if choice == 'y':
                     sponsor_ct += int(staffer['fundraising'])
                     self.staffers.remove(staffer_id)
 

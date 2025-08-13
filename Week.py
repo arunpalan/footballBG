@@ -8,7 +8,7 @@ class Week:
         self.user_team_players = user_team_players
         self.opponents = opponents
         self.strategies = strategies
-        self.tactics_per_week = 0
+        self.tactics_per_week = tactics_per_week
         self.debug_mode = debug_mode
 
         self.off_strategy = None

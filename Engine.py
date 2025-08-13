@@ -26,17 +26,24 @@ class Engine:
         }
         self.current_year = None
 
+    def compute_score(self):
+        """Compute the score based on simulation statistics."""
+        score = (self.sim_stats['sb_wins'] * 5) + (self.sim_stats['mvps'])
+        return score
+
     def print_simulation_stats(self):
         """Print the current simulation statistics."""
         self.clear_console()
         print("\nSimulation Statistics:")
         print(f"Current Year: {self.year_number}")
+        print(f"Simulation Score: {self.compute_score()}")
         print(f"Total Cash: ${self.sim_stats['cash']}")
         print(f"Super Bowl Wins: {self.sim_stats['sb_wins']}")
         print(f"Most Valuable Players: {self.sim_stats['mvps']}")
         print("Yearly Results:")
         for result in self.sim_stats['yearly_results']:
             print(f"Year {result['year']}: {result['wins']}-{result['losses']}, Playoff Wins: {result['playoff_wins']}")
+        input("\nPress Enter to continue...")
 
     def run(self, total_years=10):
         """Run the simulation for a specified number of years."""
@@ -46,6 +53,7 @@ class Engine:
             self.current_year.run_events()
 
             self.year_number += 1
+            self.print_simulation_stats()
 
     def clear_console(self):
         """Clear the console screen."""

@@ -1,5 +1,6 @@
 import csv
 import random
+import numpy as np
 
 team_names = [
     "Bears", "Packers", "Steelers", "Cowboys", "49ers", "Patriots", "Giants", "Jets",
@@ -14,15 +15,15 @@ random.shuffle(qualities)
 
 def get_clutch(q):
     if q == 5:
-        return random.randint(6, 8)
+        return random.randint(3, 7)
     elif q == 4:
-        return random.randint(4, 7)
-    elif q == 3:
         return random.randint(2, 6)
-    elif q == 2:
+    elif q == 3:
         return random.randint(1, 4)
-    else:
+    elif q == 2:
         return random.randint(0, 2)
+    else:
+        return 0
 
 def get_off(q):
     if q == 5:
@@ -38,13 +39,13 @@ def get_off(q):
 
 def get_def(q):
     if q == 5:
-        return random.randint(6, 17)
+        return random.randint(10, 21)
     elif q == 4:
-        return random.randint(2, 15)
+        return random.randint(5, 18)
     elif q == 3:
-        return random.randint(0, 13)
+        return random.randint(2, 15)
     elif q == 2:
-        return random.randint(0, 11)
+        return random.randint(0, 12)
     else:
         return random.randint(0, 9)
 
@@ -52,6 +53,7 @@ teams = []
 def_totals = [0, 0, 0, 0]  # power run, spread, west coast, vertical
 
 for i in range(200):
+    print(f"Generating team {i+1}")
     q = qualities[i]
     arch = archetypes[i % 4]
     clutch = get_clutch(q)
@@ -68,16 +70,31 @@ for i in range(200):
     diff = target - total
     # Adjust defense ratings to match total
     while diff != 0:
+        type = random.randint(0,2) if np.abs(diff) >= 3 else 0
         idx = random.randint(0, 3)
-        if diff > 0 and defs[idx] < (17 if q==5 else 15):
+        if type == 0 and diff > 0 and defs[idx] < (21 if q==5 else 18):
             defs[idx] += 1
             diff -= 1
-        elif diff < 0 and defs[idx] > 0:
+        elif type == 0 and diff < 0 and defs[idx] > 0:
             defs[idx] -= 1
             diff += 1
+        elif type == 1 and diff > 0 and off < (17 if q==5 else 15):
+            off += 1
+            diff -= 3
+        elif type == 1 and diff < 0 and off > 0:
+            off -= 1
+            diff += 3
+        elif type == 2 and diff > 0 and clutch < (8 if q==5 else 7):
+            clutch += 1
+            diff -= 4
+        elif type == 2 and diff < 0 and clutch > (3 if q==5 else 0):
+            clutch -= 1
+            diff += 4
         else:
-            # Try next index
             continue
+        
+        print(f"Diff is {diff})")
+
     def_totals = [def_totals[j] + defs[j] for j in range(4)]
     team = {
         "team_id": i+1,

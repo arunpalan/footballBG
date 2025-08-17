@@ -1,1 +1,201 @@
 team_id,team_name,quality,arch,off,power run,spread,west coast,vertical,clutch
+1,49ers,1,power run,1,0,0,15,15,0
+2,Steelers,1,vertical,0,0,0,15,14,0
+3,Texans,1,west coast,0,0,0,15,0,0
+4,Seahawks,5,spread,10,14,0,17,15,3
+5,Saints,4,power run,9,13,0,13,14,1
+6,Titans,1,vertical,4,0,0,4,0,0
+7,Jaguars,2,west coast,2,8,0,7,0,1
+8,Raiders,4,spread,14,5,5,12,5,0
+9,Chargers,1,power run,0,6,3,7,0,0
+10,Cardinals,1,vertical,5,1,0,0,0,0
+11,Titans,5,west coast,5,18,20,12,19,3
+12,Texans,2,spread,0,11,12,5,8,0
+13,Cardinals,3,power run,7,3,8,5,7,3
+14,Chargers,1,vertical,1,0,3,3,7,0
+15,Browns,4,west coast,11,13,9,17,4,0
+16,Buccaneers,3,spread,10,1,13,9,3,0
+17,Panthers,2,power run,1,0,11,11,11,0
+18,Jaguars,2,vertical,4,4,4,6,2,2
+19,Buccaneers,4,west coast,11,13,10,13,7,0
+20,Buccaneers,1,spread,1,0,7,0,6,0
+21,Ravens,2,power run,5,6,0,4,7,1
+22,Chargers,3,vertical,7,11,6,8,10,0
+23,Dolphins,2,west coast,0,10,9,9,8,0
+24,Packers,1,spread,1,0,3,5,5,0
+25,Buccaneers,3,power run,4,7,15,4,14,1
+26,Cardinals,3,vertical,4,12,11,8,13,0
+27,Broncos,5,west coast,8,11,18,11,20,3
+28,Bills,2,spread,8,6,1,0,5,0
+29,Ravens,4,power run,10,10,12,9,11,1
+30,Steelers,4,vertical,7,16,15,5,7,3
+31,Chargers,2,west coast,3,5,7,9,6,0
+32,Dolphins,3,spread,7,2,12,4,9,2
+33,Bears,1,power run,0,8,1,2,5,0
+34,Chargers,4,vertical,12,7,6,6,9,3
+35,Steelers,4,west coast,6,10,10,4,14,5
+36,Rams,1,spread,1,4,6,0,3,0
+37,Cardinals,3,power run,4,14,7,2,13,2
+38,Panthers,2,vertical,1,12,2,11,8,0
+39,Titans,2,west coast,0,9,10,1,12,1
+40,Eagles,2,spread,1,12,6,7,8,0
+41,Bills,2,power run,6,3,0,10,5,0
+42,Chargers,2,vertical,2,8,1,9,4,2
+43,Eagles,4,west coast,11,12,9,15,7,0
+44,Texans,4,spread,7,15,5,11,8,4
+45,Browns,1,power run,0,3,5,4,4,0
+46,Seahawks,4,vertical,9,8,9,15,17,0
+47,Patriots,2,west coast,1,3,11,7,4,2
+48,Bills,5,spread,2,17,12,20,21,5
+49,Cowboys,1,power run,0,2,7,0,7,0
+50,Chargers,2,vertical,7,3,3,7,2,0
+51,Commanders,4,west coast,4,16,7,16,9,4
+52,Panthers,2,spread,1,2,10,6,7,2
+53,Jaguars,4,power run,9,11,17,6,11,1
+54,Saints,1,vertical,3,0,5,0,2,0
+55,Rams,1,west coast,2,0,5,5,0,0
+56,Broncos,4,spread,6,17,11,10,12,2
+57,Eagles,3,power run,6,4,8,6,8,3
+58,Broncos,2,vertical,4,11,3,3,7,0
+59,Jets,4,west coast,7,4,14,11,10,4
+60,Bills,4,spread,6,5,8,15,18,3
+61,Raiders,1,power run,0,4,4,5,3,0
+62,Texans,3,vertical,3,6,2,8,11,5
+63,Colts,2,west coast,7,2,1,1,7,1
+64,Ravens,1,spread,1,1,0,0,4,2
+65,Jaguars,2,power run,5,10,3,5,3,0
+66,Cowboys,5,vertical,6,20,16,19,11,3
+67,Colts,4,west coast,6,16,6,16,12,2
+68,Texans,2,spread,1,12,3,3,3,3
+69,Jets,1,power run,3,0,2,0,5,0
+70,Vikings,4,vertical,8,10,8,11,11,3
+71,Dolphins,4,west coast,6,15,6,8,17,3
+72,Saints,5,spread,10,9,19,11,15,3
+73,Cowboys,4,power run,6,13,5,6,14,5
+74,Panthers,2,vertical,4,5,0,11,4,1
+75,Raiders,2,west coast,2,9,11,7,3,0
+76,Chiefs,5,spread,12,12,13,15,8,3
+77,Chiefs,4,power run,9,9,8,4,16,3
+78,Eagles,3,vertical,8,4,7,2,11,2
+79,Bears,2,west coast,3,1,11,4,7,1
+80,Colts,4,spread,6,13,16,3,18,2
+81,Saints,3,power run,2,11,13,5,13,2
+82,Commanders,2,vertical,4,7,3,3,7,1
+83,Browns,5,west coast,9,14,9,16,18,3
+84,Ravens,3,spread,9,6,9,3,3,2
+85,Patriots,1,power run,1,5,0,8,0,0
+86,Giants,3,vertical,9,12,0,6,7,1
+87,Seahawks,1,west coast,2,4,2,3,1,0
+88,Seahawks,3,spread,6,13,6,10,9,0
+89,49ers,4,power run,9,7,3,8,15,4
+90,Eagles,2,vertical,1,9,3,2,7,3
+91,Giants,5,west coast,6,13,16,19,14,4
+92,Colts,1,spread,2,4,1,0,5,0
+93,Patriots,3,power run,2,5,15,9,9,3
+94,Packers,5,vertical,13,10,12,12,11,3
+95,Dolphins,3,west coast,5,13,6,3,3,4
+96,Packers,2,spread,2,5,10,9,6,0
+97,Jets,1,power run,4,0,0,0,4,0
+98,Saints,3,vertical,7,13,6,10,6,0
+99,Patriots,5,west coast,5,19,16,11,19,4
+100,Lions,1,spread,1,1,6,6,0,0
+101,Raiders,2,power run,6,2,5,8,3,0
+102,Browns,3,vertical,7,1,10,12,12,0
+103,Chargers,3,west coast,6,3,7,11,5,3
+104,Buccaneers,2,spread,1,0,8,0,13,3
+105,Seahawks,4,power run,11,5,14,13,7,1
+106,Texans,5,vertical,11,9,10,19,13,3
+107,Jets,5,west coast,7,11,12,12,12,7
+108,Commanders,5,spread,10,9,14,14,17,3
+109,Jaguars,5,power run,6,17,16,13,20,3
+110,Jaguars,3,vertical,8,11,5,4,4,2
+111,Bills,5,west coast,7,15,12,17,19,3
+112,Vikings,3,spread,6,6,4,14,6,2
+113,Vikings,3,power run,5,2,12,6,13,2
+114,Dolphins,4,vertical,7,16,7,11,5,4
+115,Raiders,1,west coast,1,8,4,1,0,0
+116,Saints,3,spread,9,2,4,11,4,2
+117,Ravens,2,power run,5,7,2,9,3,0
+118,Bills,1,vertical,1,3,6,4,0,0
+119,Chiefs,2,west coast,3,10,1,4,8,1
+120,Raiders,3,spread,9,13,7,8,1,0
+121,Seahawks,4,power run,9,11,16,5,9,2
+122,Chargers,3,vertical,3,14,9,14,6,1
+123,Raiders,2,west coast,2,0,9,9,0,3
+124,Seahawks,3,spread,9,12,12,2,3,0
+125,Titans,3,power run,9,6,6,4,9,1
+126,Titans,1,vertical,1,8,0,3,2,0
+127,Falcons,3,west coast,4,4,3,9,4,6
+128,Broncos,2,spread,3,11,6,4,6,0
+129,Steelers,4,power run,11,10,15,11,7,0
+130,49ers,1,vertical,5,0,1,0,0,0
+131,Steelers,2,west coast,2,5,7,11,3,1
+132,Patriots,3,spread,6,3,7,8,8,3
+133,Broncos,2,power run,4,7,2,8,7,0
+134,Packers,4,vertical,12,6,7,10,17,0
+135,Raiders,3,west coast,6,5,4,2,15,3
+136,Chiefs,3,spread,8,6,11,8,3,1
+137,Chargers,3,power run,4,11,15,2,12,1
+138,Raiders,3,vertical,6,10,9,8,11,0
+139,Buccaneers,4,west coast,9,7,17,13,8,1
+140,Titans,2,spread,0,2,8,12,10,1
+141,Bears,2,power run,10,1,0,5,0,0
+142,Bills,3,vertical,8,10,5,12,5,0
+143,Rams,2,west coast,3,0,5,3,11,2
+144,Dolphins,3,spread,5,14,3,5,7,3
+145,Jaguars,2,power run,3,6,9,4,8,0
+146,Broncos,2,vertical,2,8,10,0,12,0
+147,Ravens,2,west coast,2,5,4,9,12,0
+148,Patriots,1,spread,1,5,0,2,6,0
+149,Falcons,3,power run,9,8,4,7,6,1
+150,Cardinals,3,vertical,2,8,12,7,3,5
+151,Browns,1,west coast,0,0,7,7,2,0
+152,Jets,5,spread,8,16,15,15,14,3
+153,Lions,2,power run,3,7,6,3,3,2
+154,Commanders,1,vertical,0,6,3,0,7,0
+155,Packers,5,west coast,7,19,20,10,14,3
+156,Chargers,4,spread,3,13,16,13,17,2
+157,Buccaneers,1,power run,4,3,0,0,1,0
+158,Giants,3,vertical,3,15,4,11,5,3
+159,Broncos,3,west coast,3,5,9,8,13,3
+160,Patriots,4,spread,7,15,8,16,16,0
+161,Dolphins,4,power run,7,6,4,15,10,5
+162,Bills,4,vertical,4,12,6,13,13,5
+163,Browns,1,west coast,3,0,0,0,7,0
+164,Chiefs,4,spread,5,13,6,12,14,4
+165,Steelers,4,power run,11,11,11,4,9,2
+166,Ravens,5,vertical,7,15,10,17,13,5
+167,Titans,3,west coast,7,9,3,2,5,4
+168,Cowboys,3,spread,7,4,12,4,7,2
+169,Steelers,2,power run,6,9,0,8,1,0
+170,Buccaneers,1,vertical,3,1,5,1,0,0
+171,Buccaneers,2,west coast,7,0,1,1,9,1
+172,Saints,1,spread,4,1,0,3,0,0
+173,Jets,1,power run,1,3,8,2,0,0
+174,Rams,3,vertical,5,4,3,15,7,3
+175,Packers,2,west coast,3,0,4,4,7,3
+176,Cowboys,4,spread,6,12,8,8,10,5
+177,Bills,4,power run,7,17,12,11,11,1
+178,Rams,4,vertical,11,13,14,3,9,1
+179,Steelers,2,west coast,3,4,3,3,9,2
+180,Cardinals,3,spread,6,3,11,12,12,0
+181,Titans,1,power run,4,0,3,1,0,0
+182,Jaguars,2,vertical,4,3,11,2,8,0
+183,Steelers,3,west coast,8,3,8,14,7,0
+184,Bears,5,spread,5,16,21,9,11,6
+185,Dolphins,1,power run,2,4,4,1,1,0
+186,Texans,1,vertical,0,6,5,5,0,0
+187,Eagles,4,west coast,11,10,12,8,13,0
+188,Steelers,4,spread,3,12,7,16,12,5
+189,Bills,3,power run,7,12,10,11,2,0
+190,Dolphins,3,vertical,4,11,4,8,5,4
+191,Eagles,2,west coast,3,1,7,8,7,1
+192,Bills,3,spread,5,9,10,6,8,2
+193,Dolphins,2,power run,2,11,4,0,11,1
+194,Chargers,3,vertical,4,8,14,4,6,3
+195,Raiders,1,west coast,3,3,1,3,0,0
+196,Colts,2,spread,7,0,9,6,0,0
+197,Commanders,3,power run,8,15,3,13,1,0
+198,Giants,1,vertical,1,0,5,5,3,0
+199,Lions,2,west coast,2,5,3,7,11,1
+200,Steelers,3,spread,9,6,13,3,3,1

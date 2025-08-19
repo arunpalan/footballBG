@@ -1,5 +1,6 @@
-name,side,arch,bonus,clutch
-tactic1,offense,power run,12,0
-tactic2,offense,spread,12,0
-tactic3,offense,west coast,12,0
-tactic4,offense,vertical,12,0
+name,arch,bonus,clutch
+tactic1,power run,2,0
+tactic2,spread,2,0
+tactic3,west coast,2,0
+tactic4,vertical,2,0
+tactic5,any,1,0

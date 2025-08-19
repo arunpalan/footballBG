@@ -1,10 +1,7 @@
-name,type,interest,revenue,loyalty
-fan1,general,low,1,5
-fan2,general,medium,1,7
-fan3,general,high,1,9
-fan4,premium,low,2,5
-fan5,premium,medium,2,7
-fan6,premium,high,2,9
-fan7,box,low,4,5
-fan8,box,medium,4,7
-fan9,box,high,4,9
+name,type,revenue,tickets
+fan1,general,1,0
+fan2,general,2,1
+fan3,general,3,2
+fan4,box,2,1
+fan5,box,3,2
+fan6,box,4,3

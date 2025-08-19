@@ -1,9 +1,13 @@
-name,side,arch,bonus,clutch
-strat1,offense,power run,0,0
-strat2,offense,spread,0,0
-strat3,offense,west coast,0,0
-strat4,offense,vertical,0,0
-defstrat1,defense,none,1,0
-defstrat2,defense,none,1,0
-defstrat3,defense,none,1,0
-defstrat4,defense,none,1,0
+name,arch,type,bonus,clutch
+strat1,power run,base,0,0
+strat2,spread,base,0,0
+strat3,west coast,base,0,0
+strat4,vertical,base,0,0
+strat5,power run,intermediate,1,0
+strat6,spread,intermediate,1,0
+strat7,west coast,intermediate,1,0
+strat8,vertical,intermediate,1,0
+strat9,power run,advanced,2,0
+strat10,spread,advanced,2,0
+strat11,west coast,advanced,2,0
+strat12,vertical,advanced,2,0

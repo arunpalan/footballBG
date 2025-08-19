@@ -1,6 +1,6 @@
-name,cost,general_seating,premium_seating,box_seating,expectations
-stadium1,1,3,1,0,0.4
-stadium2,2,4,2,1,0.5
-stadium3,3,5,3,1,0.6
-stadium4,4,4,4,2,0.7
-stadium5,5,2,5,3,0.8
+name,cost,general_seating,box_seating
+stadium1,1,3,1
+stadium2,2,4,3
+stadium3,3,5,4
+stadium4,4,4,6
+stadium5,5,2,8

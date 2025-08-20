@@ -1,7 +1,7 @@
 name,type,revenue,tickets
-fan1,general,1,0
-fan2,general,2,1
-fan3,general,3,2
-fan4,box,2,1
-fan5,box,3,2
-fan6,box,4,3
+fan1,general,1,1
+fan2,general,2,2
+fan3,general,3,3
+fan4,box,2,2
+fan5,box,3,3
+fan6,box,4,4

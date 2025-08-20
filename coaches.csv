@@ -1,14 +1,12 @@
-name,salary,type,recruiting,tactics,development,drafting,fundraising,outreach,trading,scouting,strategy
+name,salary,type,recruiting,tactics,development,scouting,strategy,outreach,trading,drafting,fundraising
 Ava Price,1,staffer,1,0,0,0,0,0,0,0,0
 Liam Brooks,1,staffer,0,1,0,0,0,0,0,0,0
 Maya Patel,1,staffer,0,0,1,0,0,0,0,0,0
 Noah Reed,1,staffer,0,0,0,1,0,0,0,0,0
 Ella Kim,1,staffer,0,0,0,0,1,0,0,0,0
-Owen Carter,2,staffer,2,0,0,0,0,0,0,0,0
-Zoe Bennett,2,staffer,0,2,0,0,0,0,0,0,0
-Lucas Hayes,2,staffer,0,0,2,0,0,0,0,0,0
-Ruby Singh,2,staffer,0,0,0,2,0,0,0,0,0
-Jack Turner,2,staffer,0,0,0,0,2,0,0,0,0
+Owen Carter,1,staffer,0,0,0,0,0,0,1,0,0
+Zoe Bennett,1,staffer,0,0,0,0,0,0,0,1,0
+Lucas Hayes,1,staffer,0,0,0,0,0,0,0,0,1
 Base Coach,0,coach,1,0,0,0,0,0,0,0,0
 Caleb Foster,2,coach,2,0,0,0,0,0,0,0,0
 Sophie Allen,2,coach,0,2,0,0,0,0,0,0,0

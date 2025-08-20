@@ -21,21 +21,20 @@ class Week:
         return win
 
     def display_team_roster(self, display_attribute=True):
-        self.clear_console()
-        """Show current players on your team with their attributes."""
+
         if not self.user_team_players:
-            print("\n📭 Your team has no players yet.")
-            input("\nPress Enter to continue...")
-            return 0
+            return None
+        
+        self.clear_console()
 
         print("\n📋 Your Team Roster:")
         for team_player in self.user_team_players:
             pid = team_player.get('player_name')
             player = self.simulation.players.get(pid)
             if player:
-                print(f"\nPlayer ID: {pid}")
-                for key, value in player.items():
-                    print(f"  {key}: {value}")
+                attrs = ', '.join(f"{key}: {value}" for key, value in player.items())
+                print(f"Player: {attrs}")
+                print(f"  contract: {team_player.get('contract', 'N/A')}")
             else:
                 print(f"⚠️ Player ID {pid} not found in simulation database.")
 
@@ -63,12 +62,10 @@ class Week:
             print("\nTeam Attributes:")
             print(f"Total Salary: ${total_salary}")
             print(f"Total Clutch: {total_clutch}")
-            print("Offense Attribute Sums:")
-            for attr, val in offense_sums.items():
-                print(f"  {attr}: {val}")
-            print("Defense Attribute Sums:")
-            for attr, val in defense_sums.items():
-                print(f"  {attr}: {val}")
+            attrs = ', '.join(f"{attr}: {value}" for attr, value in offense_sums.items())
+            print(f"Offense Attribute Sums: {attrs}")
+            attrs = ', '.join(f"{attr}: {value}" for attr, value in defense_sums.items())
+            print(f"Defense Attribute Sums: {attrs}")
 
         input("\nPress Enter to continue...")
 
@@ -78,11 +75,9 @@ class Week:
         if not self.opponents:
             return
         
-        print("\n Next opponent:")
+        print("\nNext opponent:")
         opponent = self.opponents[self.week_number]['team']
-        print(f"\nOpponent name: {opponent['team_name']}")
-        for key, value in opponent.items():
-            print(f"  {key}: {value}")
+        print(', '.join(f"{key}: {value}" for key, value in opponent.items()))
 
     def display_strategies(self):
         if not self.strategies:
@@ -124,10 +119,10 @@ class Week:
         eligible_tactics = [t for t in self.simulation.tactics]
         options = random.sample(eligible_tactics, k=min(self.tactics_per_week, len(eligible_tactics)))
 
-        for i, tactic in enumerate(options, start=1):
-            print(f"  {i}. {tactic['name']}")
-            for key, value in tactic.items():
-                print(f"    {key}: {value}")
+        for i, tactic_id in enumerate(options, start=1):
+            tactic = self.simulation.tactics.get(tactic_id)
+            attr = ', '.join(f"{key}: {value}" for key, value in tactic.items())
+            print(f"\n{i}: {attr}")
 
         choice = input("Enter the number of the tactic to use: ").strip()
         if choice.isdigit() and 1 <= int(choice) <= len(options):

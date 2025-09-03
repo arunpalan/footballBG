@@ -31,7 +31,7 @@ class Year:
         self.max_sponsors = 1
         self.national_revenue = 5
         self.times_scouted = 0
-        self.weeks_per_scout = 3
+        self.weeks_per_scout = 5
 
         self.bye_threshold = 0.75
         self.playoff_threshold = 0.55
@@ -135,7 +135,7 @@ class Year:
                 if extend == 'y':
                     team_player['contract'] = 2
                     print(f"[Notice] Player {player_id} has been extended.")
-                    total_salary += increased_salary
+                    total_salary += 1
                 else:
                     cutlist.append(team_player)
                     print(f"[Notice] Player {player_id} has been cut.")
@@ -366,16 +366,17 @@ class Year:
         tactic_pt = 0
         for coach_id in self.coaches:
             coach = self.simulation.coaches.get(coach_id,{})
-            choice = input(f"Would you like to use {coach_id} this week for {coach['tactic']} tactics points? (y/n)")
-            if choice == 'y':
-                tactic_pt += int(coach['tactics'])
+            if int(coach['tactics']) > 0:
+                choice = input(f"Would you like to use {coach_id} this week for {coach['tactics']} tactics points? (y/n)")
+                if choice == 'y':
+                    tactic_pt += int(coach['tactics'])
 
         for staffer_id in self.staffers:
             staffer = self.simulation.coaches.get(staffer_id,{})
             if int(staffer['tactics']) > 0:
-                choice = input(f"Would you like to use {staffer_id} this week for {staffer['tactic']} tactics points? (y/n)")
+                choice = input(f"Would you like to use {staffer_id} this week for {staffer['tactics']} tactics points? (y/n)")
                 if choice == 'y':
-                    tactic_pt += int(staffer['recruiting'])
+                    tactic_pt += int(staffer['tactics'])
                     self.staffers.remove(staffer_id)
                     
         if tactic_pt <= self.tactics_used:
@@ -699,8 +700,6 @@ class Year:
 
     def schedule_playoffs(self):
         """Select unique opponent teams for the playoffs."""
-        teams_5p = [team for team in self.simulation.teams.values() if int(team['quality']) >= 5]
-        all_teams = list(self.simulation.teams.values())  # Assuming teams is a dict
         round_names = ["Wildcard", "Divisional", "Conference", "Super Bowl"]
         
         options = [team for team in self.simulation.teams.values() if int(team['quality']) >= 3]

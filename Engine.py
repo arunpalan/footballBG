@@ -12,7 +12,7 @@ class Engine:
         self.salary_cap = 20
         self.debug_mode = False
         self.user_team_players = []  # This could be player IDs or full player dicts
-        self.stadium = ['stadium1']  # Default stadium, can be changed later
+        self.stadium = ['stadium5']  # Default stadium, can be changed later
         self.coaches = ['Base Coach']
         self.staffers = []
         self.sponsors = []

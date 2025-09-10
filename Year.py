@@ -286,18 +286,20 @@ class Year:
             attrs = ', '.join(f"{key}: {value}" for key, value in staffer.items())
             print(f"{idx}. {attrs}")
 
-        print(f"Available Cash: ${self.sim_stats['cash']}")
+        coach = self.simulation.coaches.get(self.coaches[0], {})
+        cash_available = int(self.sim_stats['cash']) - int(coach.get('salary', 0))
+        print(f"Available Cash: ${cash_available}")
         choices = input("Enter the indices of the staffer(s) to hire: ").strip()
         if choices:
             indices = choices.split(',')
             for index in indices:
                 if index.isdigit() and 1 <= int(index) <= len(eligible_staffers):
                     staffer = eligible_staffers[int(index) - 1]
-                    if int(self.sim_stats['cash']) < int(staffer['salary']):
+                    if cash_available < int(staffer['salary']):
                         print(f"You do not have enough cash to hire {staffer['name']}.")
                         continue
                     self.staffers.append(staffer['name'])
-                    self.sim_stats['cash'] = int(self.sim_stats['cash']) - int(staffer['salary'])
+                    self.sim_stats['cash'] = cash_available - int(staffer['salary'])
                     print(f"[Update] Staffer {staffer['name']} has been hired.")
                 else:
                     print(f"Invalid choice: {index}. Please enter a valid index.")
@@ -330,6 +332,11 @@ class Year:
 
         self.view_staff()
 
+        coach = self.simulation.coaches.get(self.coaches[0], {})
+        if int(coach['salary']) > self.sim_stats['cash']:
+            self.coaches[0] = ['Base Coach']
+            print("You do not have enough cash for current coach, replacing with Base Coach.")
+
         ready_to_proceed = False
         while not ready_to_proceed:
             self.clear_console()
@@ -353,9 +360,6 @@ class Year:
                 print("Invalid choice, please try again.")
 
         coach = self.simulation.coaches.get(self.coaches[0], {})
-        if int(coach['salary']) > self.sim_stats['cash']:
-            self.coach = ['Base Coach']
-            print("You do not have enough cash for current coach, replacing with Base Coach.")
 
         self.sim_stats['cash'] = int(self.sim_stats['cash']) - int(coach.get('salary', 0))
 
@@ -1055,7 +1059,7 @@ class Year:
 
         print("\nEnter the number of the strategy you want to add:")
         choice = input(">> ").strip()
-        selected_indices = {int(i) for i in choice.split(",") if i.isdigit() and 1 <= int(i) <= self.strategies_per_offseason}
+        selected_indices = {int(i) for i in choice.split(",") if i.isdigit()}
 
         for i in selected_indices:
             strategy_id = options[i - 1]['name']

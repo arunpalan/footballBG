@@ -29,7 +29,7 @@ class Simulation:
     def initialize_simulation(self):
         """Load all glossary data from CSV files."""
         self.teams = self.load_csv_data('teams.csv', key_field='team_id')
-        self.players = self.load_csv_data('players.csv', key_field='player_name')
+        self.players = self.load_csv_data('players_test.csv', key_field='player_name')
         self.coaches = self.load_csv_data('coaches.csv', key_field='name')
         self.fans = self.load_csv_data('fans.csv', key_field='name')
         self.tactics = self.load_csv_data('tactics.csv', key_field='name')

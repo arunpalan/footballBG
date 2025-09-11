@@ -122,11 +122,11 @@ class Week:
         for i, tactic_id in enumerate(options, start=1):
             tactic = self.simulation.tactics.get(tactic_id)
             attr = ', '.join(f"{key}: {value}" for key, value in tactic.items())
-            print(f"\n{i}: {attr}")
+            print(f"{i}: {attr}")
 
         choice = input("Enter the number of the tactic to use: ").strip()
         if choice.isdigit() and 1 <= int(choice) <= len(options):
-            self.tactics.append(options[int(choice) - 1]['name'])
+            self.tactics.append(options[int(choice) - 1])
 
     def gameplan(self):
         self.display_next_opponent()

@@ -18,24 +18,22 @@ class Year:
         self.sponsors = sponsors
         self.debug_mode = debug_mode
 
+        self.national_revenue = 5
         self.coach_carousel = 3
         self.players_per_free_agency = 3
-        self.trades_per_year = 1
         self.players_per_trade = 3
         self.strategies_per_offseason = 3
+        self.players_per_draft = 3
+        self.weeks_per_scout = 5
+        
         self.tactics_used = 0
         self.trades_made = 0
-        self.strategies_per_week = 1
-        self.players_per_draft = 3
         self.development_points = 0
-        self.max_sponsors = 1
-        self.national_revenue = 5
         self.times_scouted = 0
-        self.weeks_per_scout = 5
 
         self.bye_threshold = 0.75
         self.playoff_threshold = 0.55
-        self.draft_threshold = 0.3
+        self.draft_threshold = 0.25
 
         self.week_number = 1
         self.wins = 0
@@ -76,7 +74,7 @@ class Year:
             self.clear_console()
             print(f"\n--- Week {self.week_number} ---")
             print(f"\nTeam record is {self.wins}-{self.week_number-self.wins-1}")
-            print(f"Cash available: ${self.sim_stats['cash']}")
+            print(f"{self.sim_stats['tokens']} available tokens")
             print("\nChoose an activity:")
             print("1. View Team Roster")
             print("2. View Strategies")
@@ -84,7 +82,7 @@ class Year:
             print("4. Make a Trade")
             print("5. Scout Opponents")
             print("6. Play Match")
-            choice = input("Enter your choice (1-5): ").strip() if not self.debug_mode else '6'
+            choice = input("Enter your choice (1-6): ").strip() if not self.debug_mode else '6'
             if choice == '1':
                 self.display_team_roster()  
             elif choice == '2':
@@ -104,6 +102,38 @@ class Year:
 
                 input("\nPress Enter to continue to the next week...")
 
+    def coach_helper(self, attribute):
+        points = 0
+        
+        for coach_id in self.coaches:
+            coach = self.simulation.coaches.get(coach_id,{})
+            if float(coach[attribute]) == 0.5 and self.sim_stats['tokens'] >= 2:
+                choice = input(f"Would you like to spend 2 tokens to use {coach_id} for one {attribute} point? (y/n)")
+                if choice == 'y':
+                    points += 1
+                    self.sim_stats['tokens'] -= 2
+            if float(coach[attribute]) > 0.5 and self.sim_stats['tokens'] >= 1:
+                choice = input(f"Would you like to spend 1 token to use {coach_id} for {coach[attribute]} {attribute} points? (y/n)")
+                if choice == 'y':
+                    points += int(coach[attribute])
+                    self.sim_stats['tokens'] -= 1
+
+        for staffer_id in self.staffers:
+            staffer = self.simulation.coaches.get(staffer_id,{})
+            if float(staffer[attribute]) == 0.5 and self.sim_stats['tokens'] >= 2:
+                choice = input(f"Would you like to spend 2 tokens to use {staffer_id} for one {attribute} point? (y/n)")
+                if choice == 'y':
+                    points += 1
+                    self.sim_stats['tokens'] -= 2
+                    self.staffers.remove(staffer_id)
+            if float(coach[attribute]) > 0.5 and self.sim_stats['tokens'] >= 1:
+                choice = input(f"Would you like to spend 1 token to use {staffer_id} for {staffer[attribute]} {attribute} points? (y/n)")
+                if choice == 'y':
+                    points += int(coach[attribute])
+                    self.sim_stats['tokens'] -= 1
+                    
+        return points
+
     def decrement_contracts(self):
         """Decrement player contracts at the end of the year."""
         for player in self.user_team_players:
@@ -117,7 +147,7 @@ class Year:
 
         self.clear_console()
         print(f"\n--- Contract Management for Year {self.year_number} ---")
-        total_salary = self.display_team_roster(display_attribute=False)
+        self.display_team_roster(display_attribute=False)
         self.decrement_contracts()
 
         cutlist = []
@@ -128,14 +158,13 @@ class Year:
                 player = self.simulation.players.get(player_id)
                 print(f"[Notice] Player {player_id} has no contract left")
                 new_value = int(player['salary']) + 1
-                print(f"[Update] Player {player_id} new salary is ${new_value} and teams total salary is now ${total_salary + 1}")
+                print(f"[Update] Player {player_id} new salary is {new_value} and {self.sim_stats['tokens']} tokens are available")
 
                 extend = input(f"Do you want to extend {player_id} (y/n)? ").strip().lower()
                 player['salary'] = new_value
                 if extend == 'y':
                     team_player['contract'] = 2
                     print(f"[Notice] Player {player_id} has been extended.")
-                    total_salary += 1
                 else:
                     cutlist.append(team_player)
                     print(f"[Notice] Player {player_id} has been cut.")
@@ -153,8 +182,8 @@ class Year:
         self.clear_console()
         print(f"\n--- Sponsorship Management for Year {self.year_number} ---")
         collected_amount = sum(int(self.simulation.sponsors.get(sponsor, {}).get('value', 0)) for sponsor in self.sponsors)
-        self.sim_stats['cash'] = int(self.sim_stats['cash']) + collected_amount
-        print(f"[Notice] Collected ${collected_amount} from sponsors.")
+        self.sim_stats['tokens'] = int(self.sim_stats['tokens']) + collected_amount
+        print(f"[Notice] Collected {collected_amount} tokens from sponsors.")
         for sponsor_id in self.sponsors:
             sponsor = self.simulation.sponsors.get(sponsor_id)
             sponsor['contract'] = int(sponsor['contract']) - 1
@@ -172,8 +201,8 @@ class Year:
             fan = self.simulation.fans.get(fan_id)
             total_revenue += int(fan['revenue'])
 
-        self.sim_stats['cash'] += total_revenue
-        print(f"[Notice] Collected ${total_revenue} in revenue from national revenue and fans.")
+        self.sim_stats['tokens'] += total_revenue
+        print(f"[Notice] Collected {total_revenue} tokens in revenue from national revenue and fans.")
         input("\nPress Enter to continue...")
 
     def develop_players(self):
@@ -184,20 +213,12 @@ class Year:
         if not self.user_team_players:
             print("[Notice] No players available for development.")
             return
+        
+        if self.sim_stats['tokens'] < 1:
+            print("[Notice] Not enough tokens to develop players.")
+            return
 
-        dev_points = 0
-
-        for coach_id in self.coaches:
-            coach = self.simulation.coaches.get(coach_id,{})
-            dev_points += int(coach['development'])
-
-        for staffer_id in self.staffers:
-            staffer = self.simulation.coaches.get(staffer_id,{})
-            if int(staffer['development']) > 0:
-                choice = input(f"Would you like to use {staffer_id} this year for {staffer['development']} development points? (y/n)")
-                if choice == 'y':
-                    dev_points += int(staffer['development'])
-                    self.staffers.remove(staffer_id)
+        dev_points = self.coach_helper('development')
                     
         if dev_points <= 0:
             print("[Notice] No development points available for player development.")
@@ -262,17 +283,18 @@ class Year:
             attrs = ', '.join(f"{key}: {value}" for key, value in coach.items())
             print(f"  {i}. {attrs}")
 
-        print(f"Available Cash: ${self.sim_stats['cash']}")
+        print(f"{self.sim_stats['tokens']} available tokens")
 
         choice = input("Enter the number of the coach to hire: ").strip()
         if choice.isdigit() and 1 <= int(choice) <= len(options):
-            if int(self.sim_stats['cash']) < int(options[int(choice) - 1]['salary']):
-                print("You do not have enough cash to hire this coach.")
+            if int(self.sim_stats['tokens']) < int(options[int(choice) - 1]['salary']):
+                print("You do not have enough tokens to hire this coach.")
                 input("\nPress Enter to continue...")
                 return
             new_coach = options[int(choice) - 1]['name']
             self.coaches[0] = new_coach
             print(f"[Update] Head Coach changed to {new_coach}.")
+            self.sim_stats['tokens'] = int(self.sim_stats['tokens']) - int(options[int(choice) - 1]['salary'])
 
     def add_staffer(self):
         eligible_staffers = [c for c in self.simulation.coaches.values() if c['type'] == 'staffer']
@@ -287,19 +309,18 @@ class Year:
             print(f"{idx}. {attrs}")
 
         coach = self.simulation.coaches.get(self.coaches[0], {})
-        cash_available = int(self.sim_stats['cash']) - int(coach.get('salary', 0))
-        print(f"Available Cash: ${cash_available}")
+        print(f"{self.sim_stats['tokens']} available tokens")
         choices = input("Enter the indices of the staffer(s) to hire: ").strip()
         if choices:
             indices = choices.split(',')
             for index in indices:
                 if index.isdigit() and 1 <= int(index) <= len(eligible_staffers):
                     staffer = eligible_staffers[int(index) - 1]
-                    if cash_available < int(staffer['salary']):
-                        print(f"You do not have enough cash to hire {staffer['name']}.")
+                    if self.sim_stats['tokens'] < int(staffer['salary']):
+                        print(f"You do not have enough tokens to hire {staffer['name']}.")
                         continue
                     self.staffers.append(staffer['name'])
-                    self.sim_stats['cash'] = cash_available - int(staffer['salary'])
+                    self.sim_stats['tokens'] = self.sim_stats['tokens'] - int(staffer['salary'])
                     print(f"[Update] Staffer {staffer['name']} has been hired.")
                 else:
                     print(f"Invalid choice: {index}. Please enter a valid index.")
@@ -332,11 +353,6 @@ class Year:
 
         self.view_staff()
 
-        coach = self.simulation.coaches.get(self.coaches[0], {})
-        if int(coach['salary']) > self.sim_stats['cash']:
-            self.coaches[0] = ['Base Coach']
-            print("You do not have enough cash for current coach, replacing with Base Coach.")
-
         ready_to_proceed = False
         while not ready_to_proceed:
             self.clear_console()
@@ -359,29 +375,12 @@ class Year:
             else:
                 print("Invalid choice, please try again.")
 
-        coach = self.simulation.coaches.get(self.coaches[0], {})
-
-        self.sim_stats['cash'] = int(self.sim_stats['cash']) - int(coach.get('salary', 0))
-
         input("\nPress Enter to continue...")
 
     def handle_tactic_ct(self):
         
-        tactic_pt = 0
-        for coach_id in self.coaches:
-            coach = self.simulation.coaches.get(coach_id,{})
-            if int(coach['tactics']) > 0:
-                choice = input(f"Would you like to use {coach_id} this week for {coach['tactics']} tactics points? (y/n)")
-                if choice == 'y':
-                    tactic_pt += int(coach['tactics'])
-
-        for staffer_id in self.staffers:
-            staffer = self.simulation.coaches.get(staffer_id,{})
-            if int(staffer['tactics']) > 0:
-                choice = input(f"Would you like to use {staffer_id} this week for {staffer['tactics']} tactics points? (y/n)")
-                if choice == 'y':
-                    tactic_pt += int(staffer['tactics'])
-                    self.staffers.remove(staffer_id)
+        print(f"{self.tactics_used} have been used already this year.")
+        tactic_pt = self.coach_helper('tactics')
                     
         if tactic_pt <= self.tactics_used:
             return 0
@@ -497,7 +496,7 @@ class Year:
             print("3. View Playoff Bracket")
             print("4. Scout Playoff Opponents")
             print("5. Play Playoff Game")
-            choice = input("Enter your choice (1-4): ").strip() if not self.debug_mode else '5'
+            choice = input("Enter your choice (1-5): ").strip() if not self.debug_mode else '5'
             if choice == '1':
                 self.display_team_roster()
             elif choice == '2':
@@ -541,21 +540,10 @@ class Year:
         
         # Example logic: Display final stats, reset for next year, etc.
         success = (self.wins + 2*self.playoff_wins + 1) if self.playoff_wins is not None else self.wins
-        stadium = self.simulation.stadiums.get(self.stadium[0])
+        stadium = self.simulation.stadiums.get(self.stadium)
         
-        for coach_id in self.coaches:
-            coach = self.simulation.coaches.get(coach_id,{})
-            success += int(coach['outreach'])
-
-        for staffer_id in self.staffers:
-            staffer = self.simulation.coaches.get(staffer_id,{})
-            if int(staffer['outreach']) > 0:
-                choice = input(f"Would you like to use {staffer_id} this offseason for {staffer['outreach']} outreach points? (y/n)")
-                if choice == 'y':
-                    success += int(staffer['outreach'])
-                    self.staffers.remove(staffer_id)
-        
-        self.handle_fans(success, stadium)
+        outreach_points = self.coach_helper('outreach')
+        self.handle_fans(success + outreach_points, stadium)
 
         input("\nPress Enter to continue to the draft (if eligible)...")
         self.draft_players()
@@ -621,19 +609,10 @@ class Year:
         
         self.clear_console()
         print(f"\n--- Scouting Opponents for Year {self.year_number} ---")
-        scout_pt = 0
-        for coach_id in self.coaches:
-            coach = self.simulation.coaches.get(coach_id,{})
-            scout_pt += int(coach['scouting'])
 
-        for staffer_id in self.staffers:
-            staffer = self.simulation.coaches.get(staffer_id,{})
-            if int(staffer['scouting']) > 0:
-                choice = input(f"Would you like to use {staffer_id} this year for {staffer['scouting']} scouting points? (y/n)")
-                if choice == 'y':
-                    scout_pt += int(staffer['scouting'])
-                    self.staffers.remove(staffer_id)
-        
+        print(f"{self.times_scouted} times scouted this year.")
+        scout_pt = self.coach_helper('scouting')
+
         if scout_pt <= self.times_scouted:
             print("[Notice] No more scouting points available this year.")
             input("\nPress Enter to continue...")
@@ -654,18 +633,9 @@ class Year:
         
         self.clear_console()
         print(f"\n--- Scouting Playoff Opponents for Year {self.year_number} ---")
-        scout_pt = 0
-        for coach_id in self.coaches:
-            coach = self.simulation.coaches.get(coach_id,{})
-            scout_pt += int(coach['scouting'])
-
-        for staffer_id in self.staffers:
-            staffer = self.simulation.coaches.get(staffer_id,{})
-            if int(staffer['scouting']) > 0:
-                choice = input(f"Would you like to use {staffer_id} this year for {staffer['scouting']} scouting points? (y/n)")
-                if choice == 'y':
-                    scout_pt += int(staffer['scouting'])
-                    self.staffers.remove(staffer_id)
+        
+        print(f"{self.times_scouted} times scouted this year.")
+        scout_pt = self.coach_helper('scouting')
         
         if scout_pt <= self.times_scouted:
             print("[Notice] No more scouting points available this year.")
@@ -777,7 +747,7 @@ class Year:
 
         if display_attribute:
             print("\nTeam Attributes:")
-            print(f"Total Salary: ${total_salary}")
+            print(f"Total Salary: {total_salary}")
             print(f"Total Clutch: {total_clutch}")
             attrs = ', '.join(f"{attr}: {value}" for attr, value in offense_sums.items())
             print(f"Offense Attribute Sums: {attrs}")
@@ -785,8 +755,6 @@ class Year:
             print(f"Defense Attribute Sums: {attrs}")
 
         input("\nPress Enter to continue...")
-
-        return total_salary
 
     def display_strategies(self):
         if not self.strategies:
@@ -806,7 +774,7 @@ class Year:
     
     def display_stadium(self):
         self.clear_console()
-        stadium = self.simulation.stadiums.get(self.stadium[0])
+        stadium = self.simulation.stadiums.get(self.stadium)
         if not stadium:
             print("\n📭 You have no stadium assigned.")
             input("\nPress Enter to continue...")
@@ -826,33 +794,6 @@ class Year:
 
         input("\nPress Enter to continue...")
 
-    def cut_players(self):
-        """Command-line prompt to cut players from your team."""
-
-        if not self.user_team_players:
-            return 0
-
-        team_cost = self.display_team_roster(display_attribute=False)
-
-        if not self.user_team_players:
-            print("[Notice] Your team has no players to cut.")
-            return team_cost
-        
-        print(f"\nCurrent Team Cost: ${team_cost}, Salary Cap: ${self.salary_cap}, and Cash on Hand: ${self.sim_stats['cash']}")
-        print("\nEnter the number(s) of the player(s) you want to cut (e.g. 1 or 1,3):")
-        choice = input(">> ").strip()
-        selected_indices = {int(i) for i in choice.split(",") if i.isdigit() and 1 <= int(i) <= len(self.user_team_players)}
-
-        if not selected_indices:
-            print("[Notice] No valid player IDs selected.")
-            return team_cost
-        for pid in selected_indices:
-            player_id = self.user_team_players[pid - 1]  # Convert to actual player
-            self.user_team_players.remove(player_id)
-            
-        team_cost = self.display_team_roster(display_attribute=False)
-        return team_cost
-
     def player_name_exists(self, player_name): 
         """Check if a player_name exists in user_team_players."""
         return any(player.get('player_name') == player_name for player in self.user_team_players)
@@ -867,18 +808,8 @@ class Year:
             input("\nPress Enter to continue...")
             return
 
-        trade_pt = 0
-        for coach_id in self.coaches:
-            coach = self.simulation.coaches.get(coach_id,{})
-            trade_pt += int(coach['trading'])
-
-        for staffer_id in self.staffers:
-            staffer = self.simulation.coaches.get(staffer_id,{})
-            if int(staffer['trading']) > 0:
-                choice = input(f"Would you like to use {staffer_id} this year for {staffer['trading']} trading points? (y/n)")
-                if choice == 'y':
-                    trade_pt += int(staffer['trading'])
-                    self.staffers.remove(staffer_id)
+        print(f"You have made {self.trades_made} trades this year.")
+        trade_pt = self.coach_helper('trading')
         
         if trade_pt <= self.trades_made:
             print("[Notice] No more trading points available this year.")
@@ -920,11 +851,11 @@ class Year:
                 trade_choice = input("Enter the number(s) of the player(s) to trade away (e.g. 1 or 1,3): ").strip()
                 selected_trade_indices = {int(i) for i in trade_choice.split(",") if i.isdigit() and 1 <= int(i) <= len(self.user_team_players)}
 
-                print(f"\nCurrent Cash on Hand: ${self.sim_stats['cash']}")
-                added_money = int(input("Enter any additional money you want to include in the trade (positive) or ask for in exchange (negative): ").strip())
+                print(f"\nCurrent Tokens on Hand: ${self.sim_stats['tokens']}")
+                added_money = int(input("Enter any additional tokens you want to include in the trade (positive) or ask for in exchange (negative): ").strip())
 
-                if added_money > int(self.sim_stats['cash']):
-                    print(f"[Error] Only ${self.sim_stats['cash']} available on hand.")
+                if added_money > int(self.sim_stats['tokens']):
+                    print(f"[Error] Only {self.sim_stats['tokens']} available on hand.")
                     continue
 
                 cumulative_salary = sum(int(self.simulation.players.get(self.user_team_players[i - 1].get('player_name'), {}).get('salary', 0)) for i in selected_trade_indices)
@@ -944,7 +875,7 @@ class Year:
                     pid = self.user_team_players[i - 1]  # Convert to actual player
                     self.user_team_players.remove(pid)
                 
-                self.sim_stats['cash'] = int(self.sim_stats['cash']) - added_money
+                self.sim_stats['tokens'] = int(self.sim_stats['tokens']) - added_money
                 self.trades_made += 1
                 print(f"[Success] Trade completed! You acquired {new_player['player_name']}.")
                 trade_complete = True
@@ -956,24 +887,12 @@ class Year:
     def add_players(self):
         """Command-line prompt to add players from simulation."""        
 
-        recruit_pt = 0
-        for coach_id in self.coaches:
-            coach = self.simulation.coaches.get(coach_id,{})
-            recruit_pt += int(coach['recruiting'])
-
-        for staffer_id in self.staffers:
-            staffer = self.simulation.coaches.get(staffer_id,{})
-            if int(staffer['recruiting']) > 0:
-                choice = input(f"Would you like to use {staffer_id} this offseason for {staffer['recruiting']} recruiting points? (y/n)")
-                if choice == 'y':
-                    recruit_pt += int(staffer['recruiting'])
-                    self.staffers.remove(staffer_id)
+        recruit_pt = self.coach_helper('recruiting')
 
         if recruit_pt <= 0:
             return
 
-        team_cost = self.display_team_roster() or 0  # Step 1: Show team before selection
-        print(f"\nAvailable Cash: ${self.sim_stats['cash']}, Salary Cap: ${self.salary_cap}")
+        self.display_team_roster()
 
         # Only show players not already on the team and greater than 0 salary
         eligible_players = [p for pid, p in self.simulation.players.items() if pid not in self.user_team_players and int(p.get('salary', 0)) > 0]
@@ -986,6 +905,8 @@ class Year:
 
         options = random.sample(eligible_players, k=recruit_ct)
 
+        print(f"\n {recruit_pt} recruiting points available.")
+        print(f"\n {self.sim_stats['tokens']} available tokens.")
         print("\n🎯 Choose a player to add to your team:")
         for idx, player in enumerate(options, start=1):
             attrs = ', '.join(f"{key}: {value}" for key, value in player.items())
@@ -994,16 +915,18 @@ class Year:
         print("\nEnter the number(s) of the player(s) you want to add (e.g. 1 or 1,3):")
         choice = input(">> ").strip()
         selected_indices = {int(i) for i in choice.split(",") if i.isdigit() and 1 <= int(i) <= recruit_ct}
+        
+        players_added = 0
 
         for i in selected_indices:
             player_id = options[i - 1]['player_name']
             if not self.player_name_exists(player_id):
-                if team_cost + int(options[i - 1].get('salary', 0)) > self.salary_cap:
-                    print(f"[Skipped] Adding {player_id} would exceed salary cap.")
+                if team_cost + int(options[i - 1].get('salary', 0)) > int(self.sim_stats['tokens']):
+                    print(f"[Skipped] Adding {player_id} would exceed tokens on hand.")
                     input("Press Enter to continue")
                     continue
-                if team_cost + int(options[i - 1].get('salary', 0)) > int(self.sim_stats['cash']):
-                    print(f"[Skipped] Adding {player_id} would exceed money on hand.")
+                if players_added >= recruit_pt:
+                    print(f"[Skipped] You have reached your recruiting point limit of {recruit_pt}.")
                     input("Press Enter to continue")
                     continue
                 player = {
@@ -1012,43 +935,25 @@ class Year:
                 }
                 self.user_team_players.append(player)
                 print(f"[Added] Player {player_id} to your team!")
+                players_added += 1
             else:
                 print(f"[Skipped] Player {player_id} is already on your team.")
 
-        team_cost = self.display_team_roster() or 0  # Step 2: Show team after updates
-        
-        if team_cost > self.salary_cap or team_cost > int(self.sim_stats['cash']):
-            print(f"[Warning] Your team salary exceeds the salary cap of ${self.salary_cap} or cash on hand of ${self.sim_stats['cash']}.")
-            print("You will need to cut players to stay under the cap.")
-            while team_cost > self.salary_cap or team_cost > int(self.sim_stats['cash']):
-                team_cost = self.cut_players()
-        self.sim_stats['cash'] = int(self.sim_stats['cash']) - team_cost
-
     def add_strategies(self):
 
-        strategy_pt = 0
-        for coach_id in self.coaches:
-            coach = self.simulation.coaches.get(coach_id,{})
-            strategy_pt += int(coach['strategy'])
+        strategy_pt = self.coach_helper('strategy')
 
-        for staffer_id in self.staffers:
-            staffer = self.simulation.coaches.get(staffer_id,{})
-            if int(staffer['strategy']) > 0:
-                choice = input(f"Would you like to use {staffer_id} this offseason for {staffer['strategy']} strategy points? (y/n)")
-                if choice == 'y':
-                    strategy_pt += int(staffer['strategy'])
-                    self.staffers.remove(staffer_id)  
-
-        eligible_strategies = [t for tid, t in self.simulation.strategies.items() if tid not in self.strategies and t['type'] == 'base']
+        base_strategies = [t for tid, t in self.simulation.strategies.items() if tid in self.strategies and t['type'] == 'base']
         if strategy_pt >= 2:
-            eligible_strategies += [t for tid, t in self.simulation.strategies.items() if tid not in self.strategies and t['type'] == 'intermediate']
+            intermediate_strategies += [t for tid, t in self.simulation.strategies.items() if tid not in self.strategies and t['type'] == 'intermediate']
             advanced_strategies = [t for tid, t in self.simulation.strategies.items() if tid not in self.strategies and t['type'] == 'advanced']
-            eligible_strategies += random.sample(advanced_strategies, k=min(3, len(advanced_strategies)))
+            eligible_strategies = base_strategies + intermediate_strategies + random.sample(advanced_strategies, k=min(self.strategies_per_offseason, len(advanced_strategies)))
         elif strategy_pt >= 1:
             intermediate_strategies = [t for tid, t in self.simulation.strategies.items() if tid not in self.strategies and t['type'] == 'intermediate']
-            eligible_strategies += random.sample(intermediate_strategies, k=min(3, len(intermediate_strategies)))
+            eligible_strategies = base_strategies + random.sample(intermediate_strategies, k=min(self.strategies_per_offseason, len(intermediate_strategies)))
+        else:
+            eligible_strategies = random.sample(base_strategies, k=min(self.strategies_per_offseason, len(base_strategies)))
 
-        #options = random.sample(eligible_strategies, k=self.strategies_per_offseason)
         options = eligible_strategies
 
         self.clear_console()
@@ -1074,25 +979,16 @@ class Year:
     def draft_players(self):
         self.clear_console()
         
-        draft_pt = 0
-        for coach_id in self.coaches:
-            coach = self.simulation.coaches.get(coach_id,{})
-            draft_pt += int(coach['drafting'])
-
-        for staffer_id in self.staffers:
-            staffer = self.simulation.coaches.get(staffer_id,{})
-            if int(staffer['drafting']) > 0:
-                choice = input(f"Would you like to use {staffer_id} this offseason for {staffer['drafting']} drafting points? (y/n)")
-                if choice == 'y':
-                    draft_pt += int(staffer['drafting'])
-                    self.staffers.remove(staffer_id)  
-        
         # Compute win percentage
         total_games = self.weeks_per_year
         win_pct = self.wins / total_games if total_games else 0
 
         # Determine draft eligibility based on win percentage
-        if win_pct > self.draft_threshold or draft_pt <= 0:
+        if win_pct > self.draft_threshold:
+            return
+        
+        draft_pt = self.coach_helper('drafting')
+        if draft_pt <= 0:
             return
         
         print("[Draft Eligibility] You are eligible to draft players.")
@@ -1107,93 +1003,93 @@ class Year:
 
         options = random.sample(eligible_players, k=min(draft_ct, len(eligible_players)))
 
+        print(f"\n {draft_pt} drafting points available.")
         print("\n🎯 Choose a player to draft:")
         for idx, player in enumerate(options, start=1):
             attrs = ', '.join(f"{key}: {value}" for key, value in player.items())
             print(f"{idx}: {attrs}")
 
-        print("\nEnter the number of the player you want to draft:")
-        choice = input(">> ").strip()
-        selected_index = int(choice)
+        print("\nEnter the number of the player(s) you want to draft:")
+        choices = input(">> ").strip()
 
-        if selected_index < 1 or selected_index > len(options):
-            print("[Error] Invalid player selection.")
-            input("\nPress Enter to continue...")
-            return
+        players_drafted = 0
+        if choices:
+            indices = choices.split(',')
+            for index in indices:
+                if index.isdigit() and 1 <= int(index) <= draft_ct and players_drafted < draft_pt:
+                    player_to_draft = options[index - 1]
 
-        player_to_draft = options[selected_index - 1]
+                    player_to_draft['salary'] = 2
 
-        player = {
-            'player_name': player_to_draft['player_name'],
-            'contract': 3
-        }
-        self.user_team_players.append(player)
-        print(f"[Added] Player {player_to_draft['player_name']} to your team!")
+                    player = {
+                        'player_name': player_to_draft['player_name'],
+                        'contract': 3
+                    }
+                    self.user_team_players.append(player)
+                    print(f"[Added] Player {player_to_draft['player_name']} to your team!")
+                    players_drafted += 1
 
         self.display_team_roster()
 
     def add_sponsors(self):
         """Add sponsors to the team."""
-        sponsor_pt = self.max_sponsors
-
-        for coach_id in self.coaches:
-            coach = self.simulation.coaches.get(coach_id,{})
-            sponsor_pt += int(coach['fundraising'])
-
-        for staffer_id in self.staffers:
-            staffer = self.simulation.coaches.get(staffer_id,{})
-            if int(staffer['fundraising']) > 0:
-                choice = input(f"Would you like to use {staffer_id} this year for {staffer['fundraising']} fundraising points? (y/n)")
-                if choice == 'y':
-                    sponsor_pt += int(staffer['fundraising'])
-                    self.staffers.remove(staffer_id)
+        sponsor_pt = self.coach_helper('sponsorship')
 
         self.clear_console()
         print(f"\n--- Sponsor Management for Year {self.year_number} ---")
         
-        if sponsor_pt <= 0 or len(self.sponsors) >= self.max_sponsors:
+        stadium = self.simulation.stadiums.get(self.stadium)
+        if len(self.sponsors) >= self.stadium['max_sponsors']:
             return
         
-        print("You can add sponsors to your team to increase revenue.")
-
-        eligible_sponsors = [s for s in self.simulation.sponsors.values() if s['company'] not in self.sponsors and int(s['contract']) > 0]
-
-        if not eligible_sponsors:
-            print("[Notice] No eligible sponsors available.")
-            input("\nPress Enter to continue...")
+        sponsor_pt = self.coach_helper('sponsorship')
+        
+        if sponsor_pt <= 0:
             return
+        
+        while sponsor_pt > 0 and len(self.sponsors) < self.max_sponsors:
+            sponsor_pt -= 1
+        
+            print("You can add sponsors to your team to increase revenue.")
 
-        print("Available Sponsors:")
-        win_pct = self.wins / self.weeks_per_year if self.weeks_per_year else 0
-        num_choices = 1
-        if win_pct >= self.playoff_threshold:
-            num_choices = 3
-        elif win_pct >= self.draft_threshold:
-            num_choices = 2
+            eligible_sponsors = [s for s in self.simulation.sponsors.values() if s['company'] not in self.sponsors and int(s['contract']) > 0]
 
-        choices = random.sample(list(self.simulation.sponsors.values()), k=min(num_choices, len(self.simulation.sponsors)))
-
-        for idx, sponsor in enumerate(choices, start=1):
-            print(f"\nSponsor {idx}:")
-            for key, value in sponsor.items():
-                print(f"  {key}: {value}")
-
-        choice = input("Enter the number(s) of the sponsor you want to add (or 'done' to finish): ").strip()
-        if choice.lower() == 'done':
-            return
-
-        selected_choices = [int(c) for c in choice.split(",") if c.isdigit()]
-        if not selected_choices:
-            print("[Error] Invalid choice.")
-            input("\nPress Enter to continue...")
-            return
-
-        for sponsor_id in selected_choices:
-            if len(self.sponsors) >= self.max_sponsors:
-                print("[Notice] Maximum number of sponsors reached.")
+            if not eligible_sponsors:
+                print("[Notice] No eligible sponsors available.")
                 input("\nPress Enter to continue...")
                 return
-            self.sponsors.append(choices[sponsor_id - 1]['company'])
-            print(f"[Added] Sponsor {choices[sponsor_id - 1]['company']}.")
+
+            print("Available Sponsors:")
+            win_pct = self.wins / self.weeks_per_year if self.weeks_per_year else 0
+            num_choices = 1
+            if win_pct >= self.playoff_threshold:
+                num_choices = 3
+            elif win_pct >= self.draft_threshold:
+                num_choices = 2
+
+            choices = random.sample(list(self.simulation.sponsors.values()), k=min(num_choices, len(self.simulation.sponsors)))
+
+            for idx, sponsor in enumerate(choices, start=1):
+                print(f"\nSponsor {idx}:")
+                for key, value in sponsor.items():
+                    print(f"  {key}: {value}")
+
+            choice = input("Enter the number(s) of the sponsor you want to add (or 'done' to finish): ").strip()
+            if choice.lower() == 'done':
+                return
+
+            selected_choices = [int(c) for c in choice.split(",") if c.isdigit()]
+            if not selected_choices:
+                print("[Error] Invalid choice.")
+                input("\nPress Enter to continue...")
+                return
+
+            for sponsor_id in selected_choices:
+                if len(self.sponsors) >= self.max_sponsors:
+                    print("[Notice] Maximum number of sponsors reached.")
+                    input("\nPress Enter to continue...")
+                    return
+                self.sponsors.append(choices[sponsor_id - 1]['company'])
+                print(f"[Added] Sponsor {choices[sponsor_id - 1]['company']}.")
 
         input("\nPress Enter to continue...")

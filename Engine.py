@@ -12,13 +12,13 @@ class Engine:
         self.salary_cap = 20
         self.debug_mode = False
         self.user_team_players = []  # This could be player IDs or full player dicts
-        self.stadium = ['stadium5']  # Default stadium, can be changed later
+        self.stadium = 'stadium1'  # Default stadium, can be changed later
         self.coaches = ['Base Coach']
         self.staffers = []
         self.sponsors = []
         self.fans = []
         self.sim_stats = {
-            'cash': 0,
+            'tokens': 0,
             'sb_wins': 0,
             'mvps': 0,
             'yearly_results': []
@@ -36,7 +36,7 @@ class Engine:
         print("\nSimulation Statistics:")
         print(f"Current Year: {self.year_number}")
         print(f"Simulation Score: {self.compute_score()}")
-        print(f"Total Cash: ${self.sim_stats['cash']}")
+        print(f"Stashed Tokens: ${self.sim_stats['tokens']}")
         print(f"Super Bowl Wins: {self.sim_stats['sb_wins']}")
         print(f"Most Valuable Players: {self.sim_stats['mvps']}")
         print("Yearly Results:")

@@ -305,8 +305,10 @@ class Year:
             input("\nPress Enter to continue...")
             return
         
+        chosen_staffers = random.sample(eligible_staffers, k=min(self.coach_carousel, len(eligible_staffers)))
+        
         print("\nAvailable Staffers:")
-        for idx, staffer in enumerate(eligible_staffers, start=1):
+        for idx, staffer in enumerate(chosen_staffers, start=1):
             attrs = ', '.join(f"{key}: {value}" for key, value in staffer.items())
             print(f"{idx}. {attrs}")
 
@@ -315,8 +317,8 @@ class Year:
         if choices:
             indices = choices.split(',')
             for index in indices:
-                if index.isdigit() and 1 <= int(index) <= len(eligible_staffers):
-                    staffer = eligible_staffers[int(index) - 1]
+                if index.isdigit() and 1 <= int(index) <= len(chosen_staffers):
+                    staffer = chosen_staffers[int(index) - 1]
                     if self.sim_stats['tokens'] < int(staffer['salary']):
                         print(f"You do not have enough tokens to hire {staffer['name']}.")
                         continue
@@ -391,72 +393,19 @@ class Year:
 
     def handle_offseason(self):
         """Handle offseason activities like adding players and strategies."""
-        added_players = False
-        managed_coaches = False
-        added_strategies = False
-        developed_players = False
+
         ready_to_proceed = False
         self.collect_revenue()
         self.handle_sponsors()
         self.handle_contracts()
         self.schedule_matches()
+        
+        self.manage_coaches()
+        self.add_players()
+        self.add_strategies()
+        self.develop_players()
 
-        while not ready_to_proceed:
-            self.clear_console()
-            print(f"\n--- Offseason Activities for Year {self.year_number} ---")
-            print("\nChoose an offseason activity:")
-            print("1. Add Players")
-            print("2. Manage Coaches")
-            print("3. Manage Strategies")
-            print("4. Develop Players")
-            print("5. View Team Roster")
-            print("6. View Strategies")
-            print("7. View Schedule")
-            print("8. Exit Offseason")
-
-            choice = input("Enter your choice (1-8): ").strip() #if not self.debug_mode else '8'
-            if choice == '1':
-                if not added_players:
-                    added_players = True
-                    self.add_players()
-                else:
-                    print("You have already added players this offseason.")
-                    input("Press enter to continue...")
-            elif choice == '2':
-                if not managed_coaches:
-                    managed_coaches = True
-                    self.manage_coaches()
-                else:
-                    print("You have already managed coaches offseason.")
-                    input("Press enter to continue...")
-            elif choice == '3':
-                if not added_strategies:
-                    added_strategies = True
-                    self.add_strategies()
-                else:
-                    print("You have already added strategies this offseason")
-                    input("Press enter to continue...")
-            elif choice == '4':
-                if not developed_players:
-                    developed_players = True
-                    self.develop_players()
-                else:
-                    print("You have already developed players this offseason.")
-                    input("Press enter to continue...")
-            elif choice == '5':
-                self.display_team_roster()
-            elif choice == '6':
-                self.display_strategies()
-            elif choice == '7':
-                self.view_schedule()
-            elif choice == '8':
-                if not added_strategies:
-                    print("You must add strategies before proceeding.")
-                    input("Press enter to continue...")
-                    continue
-                ready_to_proceed = True
-            else:
-                print("Invalid choice, please try again.")
+        self.view_schedule()
 
     def handle_playoffs(self):
         """Handle NFL-like 12-team playoff bracket."""
@@ -947,6 +896,8 @@ class Year:
                 print(f"[Skipped] Player {player_id} is already on your team.")
 
     def add_strategies(self):
+
+        self.display_team_roster()
 
         strategy_pt = self.coach_helper('strategy')
 

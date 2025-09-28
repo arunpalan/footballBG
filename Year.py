@@ -203,11 +203,42 @@ class Year:
             fan_id = stadium['fan' + str(fan_num)]
             if fan_id != '0':
                 fan = self.simulation.fans.get(fan_id)
-                total_revenue += int(fan['revenue'])
+                if self.check_trigger(fan['trigger']):
+                    total_revenue += int(fan['revenue'])
 
         self.sim_stats['tokens'] += total_revenue
         print(f"[Notice] Collected {total_revenue} tokens in revenue from national revenue and fans.")
         input("\nPress Enter to continue...")
+
+    def check_trigger(self, trigger):
+        if trigger == '1':
+            # Win two in a row. TODO update
+            return self.wins >= 2
+        if trigger == '2':
+            # Don't lose four in a row. TODO update
+            return self.wins >= 3
+        if trigger == '3':
+            # Win four games
+            return self.wins >= 4
+        if trigger == '4':
+            # Win five games
+            return self.wins >= 5
+        if trigger == '5':
+            # Make playoffs
+            return self.playoff_wins is not None
+        if trigger == '6':
+            # Make divisional round. TODO update
+            return self.playoff_wins is not None and self.playoff_wins >= 1
+        if trigger == '7':
+            # Win three in a row. TODO update
+            return self.wins >= 5
+        if trigger == '8':
+            # Don't lose three in a row. TODO update
+            return self.wins >= 5
+        if trigger == '9':
+            # Win 10 games
+            win_ct = self.wins + self.playoff_wins if self.playoff_wins is not None else self.wins
+            return win_ct >= 10
 
     def develop_players(self):
         """Develop players by spending development points."""

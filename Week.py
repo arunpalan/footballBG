@@ -157,7 +157,7 @@ class Week:
             if tactic['type'] == 'defense':
                 if tactic['arch'] == def_arch or tactic['arch'] == 'any':
                     def_rat += int(tactic['bonus'])
-            else:
+            if tactic['type'] == 'offense':
                 if tactic['arch'] == off_arch or tactic['arch'] == 'any':
                     off_rat += int(tactic['bonus'])
 

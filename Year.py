@@ -4,7 +4,7 @@ from Week import Week
 import os
 
 class Year:
-    def __init__(self, year_number, simulation, user_team_players, weeks_per_year, sim_stats, salary_cap, stadium, fans, coaches, staffers, sponsors, debug_mode):
+    def __init__(self, year_number, simulation, user_team_players, weeks_per_year, sim_stats, salary_cap, stadium, coaches, staffers, sponsors, debug_mode):
         self.year_number = year_number
         self.simulation = simulation
         self.user_team_players = user_team_players
@@ -12,7 +12,6 @@ class Year:
         self.sim_stats = sim_stats
         self.salary_cap = salary_cap
         self.stadium = stadium
-        self.fans = fans
         self.coaches = coaches
         self.staffers = staffers
         self.sponsors = sponsors
@@ -199,9 +198,12 @@ class Year:
         """Collect revenue from fans based on their type."""
         total_revenue = self.national_revenue
 
-        for fan_id in self.fans:
-            fan = self.simulation.fans.get(fan_id)
-            total_revenue += int(fan['revenue'])
+        stadium = self.simulation.stadiums.get(self.stadium)
+        for fan_num in range(1,9):
+            fan_id = stadium['fan' + str(fan_num)]
+            if fan_id != '0':
+                fan = self.simulation.fans.get(fan_id)
+                total_revenue += int(fan['revenue'])
 
         self.sim_stats['tokens'] += total_revenue
         print(f"[Notice] Collected {total_revenue} tokens in revenue from national revenue and fans.")
@@ -395,7 +397,6 @@ class Year:
         """Handle offseason activities like adding players and strategies."""
 
         ready_to_proceed = False
-        self.collect_revenue()
         self.handle_sponsors()
         self.handle_contracts()
         self.schedule_matches()
@@ -493,69 +494,11 @@ class Year:
         self.clear_console()
         print(f"\n--- Postseason Activities for Year {self.year_number} ---")
         print("You can now review your season and prepare for the next year.")
-        
-        # Example logic: Display final stats, reset for next year, etc.
-        success = (self.wins + 2*self.playoff_wins + 1) if self.playoff_wins is not None else self.wins
-        stadium = self.simulation.stadiums.get(self.stadium)
-        
-        outreach_points = self.coach_helper('outreach')
-        self.handle_fans(success + outreach_points, stadium)
 
-        input("\nPress Enter to continue to the draft (if eligible)...")
         self.draft_players()
-        input("\nPress Enter to continue to sponsorship (if eligible)...")
         self.add_sponsors()
+        self.collect_revenue()
         input("\nPress Enter to finish the postseason...")
-
-    def handle_fans(self, performance_rating, stadium):
-        """Handle fan reactions based on team performance."""
-        flag_removal = []
-        filled_box_seats = 0
-
-        self.clear_console()
-        print(f"\n--- Fan Engagement for Year {self.year_number} ---")
-        print(f"Performance Rating: {performance_rating}")
-
-        ticket_ct = 0
-        for fan_id in self.fans:
-            fan = self.simulation.fans.get(fan_id)
-            ticket_ct += int(fan['tickets'])
-            if fan['type'] == 'box':
-                filled_box_seats += 1
-            if ticket_ct > performance_rating:
-                print(f"[Notice] Fan {fan_id} has been removed due to low performance.")
-                input("Press Enter to continue...")
-                flag_removal.append(fan_id)
-                
-        for fan_id in flag_removal:
-            self.fans.remove(fan_id)
-                
-        if ticket_ct < performance_rating:
-            adding_fans = True
-            
-            while adding_fans:
-                random_fan_key = random.choice(list(self.simulation.fans.keys()))
-                random_fan = self.simulation.fans[random_fan_key]
-                
-                if len(self.fans) >= int(stadium['general_seating']) + int(stadium['box_seating']):
-                    print("Stadium is at full capacity, cannot add more fans.")
-                    input("Press Enter to continue...")
-                    break
-                
-                if random_fan['type'] == 'box' and filled_box_seats + 1 > int(stadium['box_seating']):
-                    continue
-                
-                if ticket_ct + int(random_fan['tickets']) <= performance_rating:
-                    self.fans.append(random_fan_key)
-                    ticket_ct += int(random_fan['tickets'])
-                    if random_fan['type'] == 'box':
-                        filled_box_seats += 1
-                    print(f"[Notice] Fan {random_fan_key} has been added to the team.")
-                    input("Press Enter to continue...")
-                else:
-                    adding_fans = False
-
-        self.display_stadium()
 
     def clear_console(self):
         """Clear the console for better readability."""
@@ -739,14 +682,6 @@ class Year:
         print("\n🏟️ Your Stadium Details:")
         for key, value in stadium.items():
             print(f"  {key}: {value}")
-
-        print("Fans in your stadium:")
-        for fan_id in self.fans:
-            fan = self.simulation.fans.get(fan_id)
-            if fan:
-                print(f"  {fan_id}: {', '.join(f'{k}: {v}' for k, v in fan.items())}")
-            else:
-                print(f"⚠️ Fan ID {fan_id} not found in simulation database.")
 
         input("\nPress Enter to continue...")
 

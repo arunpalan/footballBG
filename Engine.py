@@ -13,10 +13,9 @@ class Engine:
         self.debug_mode = False
         self.user_team_players = []  # This could be player IDs or full player dicts
         self.stadium = 'stadium1'  # Default stadium, can be changed later
-        self.coaches = ['Base Coach']
+        self.coaches = ['John Madden']
         self.staffers = []
         self.sponsors = []
-        self.fans = []
         self.sim_stats = {
             'tokens': 0,
             'sb_wins': 0,
@@ -48,7 +47,7 @@ class Engine:
         """Run the simulation for a specified number of years."""
         while self.year_number <= total_years:
             print(f"\n--- Year {self.year_number} ---")
-            self.current_year = Year(self.year_number, self.simulation, self.user_team_players, self.weeks_per_year, self.sim_stats, self.salary_cap, self.stadium, self.fans, self.coaches, self.staffers, self.sponsors, self.debug_mode)
+            self.current_year = Year(self.year_number, self.simulation, self.user_team_players, self.weeks_per_year, self.sim_stats, self.salary_cap, self.stadium, self.coaches, self.staffers, self.sponsors, self.debug_mode)
             self.current_year.run_events()
 
             self.year_number += 1

@@ -31,7 +31,7 @@ class Simulation:
         self.teams = self.load_csv_data('teams.csv', key_field='team_id')
         self.players = self.load_csv_data('players_test.csv', key_field='player_name')
         self.coaches = self.load_csv_data('coaches.csv', key_field='name')
-        self.fans = self.load_csv_data('fans.csv', key_field='name')
+        self.fans = self.load_csv_data('fans.csv', key_field='id')
         self.tactics = self.load_csv_data('tactics.csv', key_field='name')
         self.stadiums = self.load_csv_data('stadiums.csv', key_field='name')
         self.strategies = self.load_csv_data('strategies.csv', key_field='name')

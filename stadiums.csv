@@ -1,6 +1,2 @@
-name,cost,general_seating,box_seating,max_sponsors
-stadium1,1,3,1,1
-stadium2,2,4,3,2
-stadium3,3,5,4,3
-stadium4,4,4,6,4
-stadium5,5,2,8,5
+name,fan1,fan2,fan3,fan4,fan5,fan6,fan7,fan8,max_sponsors
+stadium1,1,2,3,4,7,0,0,0,1

@@ -17,7 +17,7 @@ class Engine:
         self.staffers = []
         self.sponsors = []
         self.sim_stats = {
-            'tokens': 0,
+            'tokens': 5,
             'sb_wins': 0,
             'mvps': 0,
             'yearly_results': []

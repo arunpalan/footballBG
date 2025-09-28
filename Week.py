@@ -154,8 +154,12 @@ class Week:
 
         for tactic_id in self.tactics:
             tactic = self.simulation.tactics.get(tactic_id)
-            if tactic['arch'] == def_arch or tactic['arch'] == 'any':
-                def_rat += int(tactic['bonus'])
+            if tactic['type'] == 'defense':
+                if tactic['arch'] == def_arch or tactic['arch'] == 'any':
+                    def_rat += int(tactic['bonus'])
+            else:
+                if tactic['arch'] == off_arch or tactic['arch'] == 'any':
+                    off_rat += int(tactic['bonus'])
 
         for team_player in self.user_team_players:
             pid = team_player.get('player_name')

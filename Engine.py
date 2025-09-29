@@ -12,12 +12,12 @@ class Engine:
         self.salary_cap = 20
         self.debug_mode = False
         self.user_team_players = []  # This could be player IDs or full player dicts
-        self.stadium = 'stadium1'  # Default stadium, can be changed later
-        self.coaches = ['John Madden']
+        self.stadium = 'Everbank Stadium'  # Default stadium, can be changed later
+        self.coaches = ['Jaguars Staff','John Madden']
         self.staffers = []
-        self.sponsors = []
+        self.sponsors = ['Everbank']
         self.sim_stats = {
-            'tokens': 5,
+            'tokens': 2,
             'sb_wins': 0,
             'mvps': 0,
             'yearly_results': []

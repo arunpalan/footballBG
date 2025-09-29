@@ -17,8 +17,9 @@ class Year:
         self.sponsors = sponsors
         self.debug_mode = debug_mode
 
-        self.national_revenue = 5
-        self.coach_carousel = 3
+        self.national_revenue = 2
+        self.contract_length = 3
+        self.coach_carousel = 5
         self.players_per_free_agency = 3
         self.players_per_trade = 3
         self.strategies_per_offseason = 3
@@ -161,10 +162,15 @@ class Year:
                 new_value = int(player['salary']) + 1
                 print(f"[Update] Player {player_id} new salary is {new_value} and {self.sim_stats['tokens']} tokens are available")
 
+                if new_value > self.sim_stats['tokens']:
+                    cutlist.append(team_player)
+                    continue
+
                 extend = input(f"Do you want to extend {player_id} (y/n)? ").strip().lower()
                 player['salary'] = new_value
                 if extend == 'y':
-                    team_player['contract'] = 2
+                    self.sim_stats['tokens'] -= new_value
+                    team_player['contract'] = self.contract_length
                     print(f"[Notice] Player {player_id} has been extended.")
                 else:
                     cutlist.append(team_player)
@@ -307,7 +313,7 @@ class Year:
 
     def replace_head_coach(self):
         self.clear_console()
-        eligible_coaches = [c for c in self.simulation.coaches.values() if c['type'] == 'coach' and c['name'] != self.coaches[0] and int(c['salary']) > 0]
+        eligible_coaches = [c for c in self.simulation.coaches.values() if c['type'] == 'coach' and c['name'] != self.coaches[-1] and int(c['salary']) > 0]
         if not eligible_coaches:
             print("No other coaches available to hire.")
             input("\nPress Enter to continue...")
@@ -327,7 +333,7 @@ class Year:
                 input("\nPress Enter to continue...")
                 return
             new_coach = options[int(choice) - 1]['name']
-            self.coaches[0] = new_coach
+            self.coaches[-1] = new_coach
             print(f"[Update] Head Coach changed to {new_coach}.")
             self.sim_stats['tokens'] = int(self.sim_stats['tokens']) - int(options[int(choice) - 1]['salary'])
 
@@ -373,12 +379,16 @@ class Year:
             print("No coaches hired yet.")
             return
         
-        attrs = ', '.join(f"{key}: {value}" for key, value in self.simulation.coaches.get(self.coaches[0], {}).items())
+        attrs = ', '.join(f"{key}: {value}" for key, value in self.simulation.coaches.get(self.coaches[-1], {}).items())
         print(f"Head Coach: {attrs}")
+
+        if len(self.coaches) > 1:
+            attrs = ', '.join(f"{key}: {value}" for key, value in self.simulation.coaches.get(self.coaches[0], {}).items())
+            print(f"Team Staff: {attrs}")
 
         for staffer in self.staffers:
             attrs = ', '.join(f"{key}: {value}" for key, value in self.simulation.coaches.get(staffer, {}).items())
-            print(f"Staffer: {attrs}")
+            print(f"Additional Staffers: {attrs}")
 
         input("\nPress Enter to continue...")
 
@@ -789,7 +799,7 @@ class Year:
                 # Execute trade
                 new_player = {
                     'player_name': options[int(choice) - 1]['player_name'],
-                    'contract': 2
+                    'contract': self.contract_length
                 }
                 self.user_team_players.append(new_player)
                 
@@ -852,7 +862,7 @@ class Year:
                     continue
                 player = {
                     'player_name': player_id,
-                    'contract': 2
+                    'contract': self.contract_length
                 }
                 self.user_team_players.append(player)
                 self.sim_stats['tokens'] = int(self.sim_stats['tokens']) - int(options[i - 1].get('salary', 0))
@@ -945,7 +955,7 @@ class Year:
 
                     player = {
                         'player_name': player_to_draft['player_name'],
-                        'contract': 3
+                        'contract': self.contract_length + 1
                     }
                     self.user_team_players.append(player)
                     print(f"[Added] Player {player_to_draft['player_name']} to your team!")

@@ -11,13 +11,13 @@ class Engine:
         self.weeks_per_year = 10
         self.salary_cap = 20
         self.debug_mode = False
-        self.user_team_players = []  # This could be player IDs or full player dicts
-        self.stadium = 'Everbank Stadium'  # Default stadium, can be changed later
-        self.coaches = ['Jaguars Staff','John Madden']
+        self.user_team_players = [{'player_name': 'Dak Prescott', 'contract': 3},{'player_name': 'Micah Parsons', 'contract': 3}]  # This could be player IDs or full player dicts
+        self.stadium = 'AT&T Stadium'  # Default stadium, can be changed later
+        self.coaches = ['Cowboys Staff','John Madden']
         self.staffers = []
-        self.sponsors = ['Everbank']
+        self.sponsors = ['Allied Insurance']
         self.sim_stats = {
-            'tokens': 2,
+            'tokens': 3,
             'sb_wins': 0,
             'mvps': 0,
             'yearly_results': []

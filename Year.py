@@ -445,7 +445,7 @@ class Year:
             return 0
         
         self.tactics_used += 1
-        return 3
+        return 5
 
     def handle_offseason(self):
         """Handle offseason activities like adding players and strategies."""
@@ -858,6 +858,13 @@ class Year:
             return
         
         while recruit_pt > 0:
+            self.clear_console()
+            
+            print("\nFree Agency Market:")
+            for idx, player in enumerate(options, start=1):
+                attrs = ', '.join(f"{key}: {value}" for key, value in player.items())
+                print(f"{idx}: {attrs}")
+                
             print(f"{recruit_pt} recruiting points available and {self.sim_stats['tokens']} tokens available.")
             print("\nEnter the number(s) of the player(s) you want to add (e.g. 1 or 1,3):")
             choice = input(">> ").strip()
@@ -881,6 +888,7 @@ class Year:
                     print(f"[Skipped] Player {player_id} is already on your team.")
 
             recruit_pt -= 1
+            options = random.sample(eligible_players, k=recruit_ct)
 
     def add_strategies(self):
 

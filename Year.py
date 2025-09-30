@@ -20,7 +20,7 @@ class Year:
         self.national_revenue = 2
         self.contract_length = 3
         self.coach_carousel = 5
-        self.players_per_free_agency = 3
+        self.players_per_free_agency = 5
         self.players_per_trade = 3
         self.strategies_per_offseason = 3
         self.players_per_draft = 3
@@ -311,6 +311,19 @@ class Year:
 
         input("\nPress Enter to continue...")
 
+    def playoff_experience(self):
+        for team_player in self.user_team_players:
+            player_id = team_player['player_name']
+            player = self.simulation.players.get(player_id)
+            roll = random.randint(1,6)
+
+            if roll <= 2:
+                player['clutch'] = int(player['clutch']) + 1
+                print(f"Player {player_id} clutch increased to {player['clutch']}")
+            else:
+                player['dev points'] = int(player['dev points']) + 1
+                print(f"Player {player_id} dev points increased to {player['dev points']}")
+
     def replace_head_coach(self):
         self.clear_console()
         eligible_coaches = [c for c in self.simulation.coaches.values() if c['type'] == 'coach' and c['name'] != self.coaches[-1] and int(c['salary']) > 0]
@@ -528,6 +541,8 @@ class Year:
             self.sim_stats['sb_wins'] += 1
         else:
             print("🏈 Your playoff run has ended.")
+
+        self.playoff_experience()
         input("\nPress Enter to finish the playoffs...")
 
     def handle_postseason(self):

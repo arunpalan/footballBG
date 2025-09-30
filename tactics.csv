@@ -1,20 +1,20 @@
 name,type,arch,bonus,clutch
-tactic1,offense,power run,1,1
-tactic2,offense,spread,1,1
-tactic3,offense,west coast,1,1
-tactic4,offense,vertical,1,1
-tactic5,offense,any,1,0
-tactic6,defense,power run,2,1
-tactic7,defense,spread,2,1
-tactic8,defense,west coast,2,1
-tactic9,defense,vertical,2,1
-tactic10,defense,any,1,1
-tactic11,offense,power run,2,0
-tactic12,offense,spread,2,0
-tactic13,offense,west coast,2,0
-tactic14,offense,vertical,2,0
-tactic16,defense,power run,4,0
-tactic17,defense,spread,4,0
-tactic18,defense,west coast,4,0
-tactic19,defense,vertical,4,0
-tactic20,defense,any,2,0
+tactic1,offense,power run,1,2
+tactic2,offense,spread,1,2
+tactic3,offense,west coast,1,2
+tactic4,offense,vertical,1,2
+tactic5,offense,any,1,1
+tactic6,defense,power run,2,2
+tactic7,defense,spread,2,2
+tactic8,defense,west coast,2,2
+tactic9,defense,vertical,2,2
+tactic10,defense,any,1,2
+tactic11,offense,power run,2,1
+tactic12,offense,spread,2,1
+tactic13,offense,west coast,2,1
+tactic14,offense,vertical,2,1
+tactic16,defense,power run,4,1
+tactic17,defense,spread,4,1
+tactic18,defense,west coast,4,1
+tactic19,defense,vertical,4,1
+tactic20,defense,any,2,1

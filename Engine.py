@@ -43,7 +43,7 @@ class Engine:
             print(f"Year {result['year']}: {result['wins']}-{result['losses']}, Playoff Wins: {result['playoff_wins']}")
         input("\nPress Enter to continue...")
 
-    def run(self, total_years=10):
+    def run(self, total_years=15):
         """Run the simulation for a specified number of years."""
         while self.year_number <= total_years:
             print(f"\n--- Year {self.year_number} ---")

@@ -3,11 +3,11 @@ strat1,power run,base,0,0
 strat2,spread,base,0,0
 strat3,west coast,base,0,0
 strat4,vertical,base,0,0
-strat5,power run,intermediate,1,0
-strat6,spread,intermediate,1,0
-strat7,west coast,intermediate,1,0
-strat8,vertical,intermediate,1,0
-strat9,power run,advanced,2,0
-strat10,spread,advanced,2,0
-strat11,west coast,advanced,2,0
-strat12,vertical,advanced,2,0
+strat5,power run,intermediate,2,1
+strat6,spread,intermediate,2,1
+strat7,west coast,intermediate,2,1
+strat8,vertical,intermediate,2,1
+strat9,power run,advanced,4,2
+strat10,spread,advanced,4,2
+strat11,west coast,advanced,4,2
+strat12,vertical,advanced,4,2

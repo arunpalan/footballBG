@@ -842,34 +842,30 @@ class Year:
         if recruit_pt <= 0:
             return
         
-        print(f"{recruit_pt} recruiting points available and {self.sim_stats['tokens']} tokens available.")
-        print("\nEnter the number(s) of the player(s) you want to add (e.g. 1 or 1,3):")
-        choice = input(">> ").strip()
-        selected_indices = {int(i) for i in choice.split(",") if i.isdigit() and 1 <= int(i) <= recruit_ct}
-        
-        players_added = 0
+        while recruit_pt > 0:
+            print(f"{recruit_pt} recruiting points available and {self.sim_stats['tokens']} tokens available.")
+            print("\nEnter the number(s) of the player(s) you want to add (e.g. 1 or 1,3):")
+            choice = input(">> ").strip()
+            selected_indices = {int(i) for i in choice.split(",") if i.isdigit() and 1 <= int(i) <= recruit_ct}
+            
+            for i in selected_indices:
+                player_id = options[i - 1]['player_name']
+                if not self.player_name_exists(player_id):
+                    if int(options[i - 1].get('salary', 0)) > int(self.sim_stats['tokens']):
+                        print(f"[Skipped] Adding {player_id} would exceed tokens on hand.")
+                        input("Press Enter to continue")
+                        continue
+                    player = {
+                        'player_name': player_id,
+                        'contract': self.contract_length
+                    }
+                    self.user_team_players.append(player)
+                    self.sim_stats['tokens'] = int(self.sim_stats['tokens']) - int(options[i - 1].get('salary', 0))
+                    print(f"[Added] Player {player_id} to your team!")
+                else:
+                    print(f"[Skipped] Player {player_id} is already on your team.")
 
-        for i in selected_indices:
-            player_id = options[i - 1]['player_name']
-            if not self.player_name_exists(player_id):
-                if int(options[i - 1].get('salary', 0)) > int(self.sim_stats['tokens']):
-                    print(f"[Skipped] Adding {player_id} would exceed tokens on hand.")
-                    input("Press Enter to continue")
-                    continue
-                if players_added >= recruit_pt:
-                    print(f"[Skipped] You have reached your recruiting point limit of {recruit_pt}.")
-                    input("Press Enter to continue")
-                    continue
-                player = {
-                    'player_name': player_id,
-                    'contract': self.contract_length
-                }
-                self.user_team_players.append(player)
-                self.sim_stats['tokens'] = int(self.sim_stats['tokens']) - int(options[i - 1].get('salary', 0))
-                print(f"[Added] Player {player_id} to your team!")
-                players_added += 1
-            else:
-                print(f"[Skipped] Player {player_id} is already on your team.")
+            recruit_pt -= 1
 
     def add_strategies(self):
 
@@ -931,7 +927,7 @@ class Year:
             input("\nPress Enter to continue...")
             return
         
-        draft_ct = self.players_per_draft
+        draft_ct = self.players_per_draft + draft_pt - 1
 
         options = random.sample(eligible_players, k=min(draft_ct, len(eligible_players)))
 

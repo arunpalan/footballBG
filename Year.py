@@ -898,7 +898,7 @@ class Year:
 
         base_strategies = [t for tid, t in self.simulation.strategies.items() if tid not in self.strategies and t['type'] == 'base']
         if strategy_pt >= 2:
-            intermediate_strategies += [t for tid, t in self.simulation.strategies.items() if tid not in self.strategies and t['type'] == 'intermediate']
+            intermediate_strategies = [t for tid, t in self.simulation.strategies.items() if tid not in self.strategies and t['type'] == 'intermediate']
             advanced_strategies = [t for tid, t in self.simulation.strategies.items() if tid not in self.strategies and t['type'] == 'advanced']
             eligible_strategies = base_strategies + intermediate_strategies + random.sample(advanced_strategies, k=min(self.strategies_per_offseason, len(advanced_strategies)))
         elif strategy_pt >= 1:
@@ -908,6 +908,11 @@ class Year:
             eligible_strategies = random.sample(base_strategies, k=min(self.strategies_per_offseason, len(base_strategies)))
 
         options = eligible_strategies
+
+        print("\nAvailable Strategies:")
+        for idx, strategy in enumerate(options, start=1):
+            attrs = ', '.join(f"{key}: {value}" for key, value in strategy.items())
+            print(f"{idx}: {attrs}")
 
         print("\n🎯Enter the number(s) of the strategy you want to add (e.g. 1 or 1,3):")
         choice = input(">> ").strip()

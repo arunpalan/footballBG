@@ -910,12 +910,7 @@ class Year:
         options = eligible_strategies
 
         self.clear_console()
-        print("\n🎯 Choose a strategy to add:")
-        for idx, strategy in enumerate(options, start=1):
-            attrs = ', '.join(f"{key}: {value}" for key, value in strategy.items())
-            print(f"{idx}: {attrs}")
-
-        print("\nEnter the number of the strategy you want to add:")
+        print("\n🎯Enter the number(s) of the strategy you want to add (e.g. 1 or 1,3):")
         choice = input(">> ").strip()
         selected_indices = {int(i) for i in choice.split(",") if i.isdigit()}
 
@@ -923,9 +918,9 @@ class Year:
             strategy_id = options[i - 1]['name']
             if strategy_id not in self.strategies:
                 self.strategies.append(strategy_id)
-                print(f"[Added] Strategy {strategy_id} to your team!")
+                print(f"[Added] Strategy {strategy_id}!")
             else:
-                print(f"[Skipped] Strategy {strategy_id} is already on your team.")
+                print(f"[Skipped] You already have Strategy {strategy_id}.")
 
     def draft_players(self):
         self.clear_console()

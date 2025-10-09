@@ -909,7 +909,6 @@ class Year:
 
         options = eligible_strategies
 
-        self.clear_console()
         print("\n🎯Enter the number(s) of the strategy you want to add (e.g. 1 or 1,3):")
         choice = input(">> ").strip()
         selected_indices = {int(i) for i in choice.split(",") if i.isdigit()}

@@ -317,10 +317,10 @@ class Year:
             player = self.simulation.players.get(player_id)
             roll = random.randint(1,6)
 
-            if roll <= 2:
+            if roll <= 1:
                 player['clutch'] = int(player['clutch']) + 1
                 print(f"Player {player_id} clutch increased to {player['clutch']}")
-            else:
+            if roll >= 3:
                 player['dev points'] = int(player['dev points']) + 1
                 print(f"Player {player_id} dev points increased to {player['dev points']}")
 

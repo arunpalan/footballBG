@@ -11,6 +11,7 @@
         
 import numpy as np
 import csv
+from math import comb
 
 def load_csv_data(filepath, key_field):
     """General method to load CSV data into a dictionary keyed by 'key_field'."""
@@ -129,5 +130,14 @@ def balance():
     print(f"Quality 3 Win Pct: {100*np.mean(winPct3):.3f}%")
     print(f"Quality 4 Win Pct: {100*np.mean(winPct4):.3f}%")
     print(f"Quality 5 Win Pct: {100*np.mean(winPct5):.3f}%")
+    
+    # Calculate how likely to make playoffs
+    required_wins = 4
+    total_games = 10
+    prob_make_playoffs = 0.0
+    for wins in range(required_wins, total_games + 1):
+        prob_make_playoffs += comb(total_games, wins) * (np.mean(winPct) ** wins) * ((1 - np.mean(winPct)) ** (total_games - wins))
+        
+    print(f"Probability of making playoffs (at least {required_wins} wins): {100*prob_make_playoffs:.3f}%")
     
 balance()

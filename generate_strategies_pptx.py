@@ -25,6 +25,10 @@ DEFAULT_FONT = "Tecmo Bowl"
 FIELD_FONTS = {
 }
 
+BASE = RGBColor(115,250,121)
+INTER = RGBColor(255,252,121)
+ADV = RGBColor(255,126,121)
+
 # add near POSITIONS or at top
 IMAGE_POS = (1.5, 0.75, 0.75, 0.75) # (left_in, top_in, width_in, height_in)
 
@@ -58,18 +62,17 @@ def generate_pptx():
     for i, row in df.iterrows():
         slide = prs.slides.add_slide(blank_layout)
 
-        # Add the image to the slide, positioned at (0,0) and filling the entire slide
-        left = top = Inches(0)
-        
-        # choose player template background image
-        #pic = slide.shapes.add_picture('player_template_offense.jpeg', left, top, 
-        #                            width=prs.slide_width, height=prs.slide_height)
-
-        # Move the image to the background by manipulating the XML element tree
-        # This sends the picture behind all other shapes on the slide
-        #slide.shapes._spTree.remove(pic._element)
-        #slide.shapes._spTree.insert(2, pic._element) 
-
+        # Change background color
+        background = slide.background
+        fill = background.fill
+        fill.solid()
+        if row.get("type","").lower() == "base":
+            fill.fore_color.rgb = BASE
+        elif row.get("type","").lower() == "intermediate":
+            fill.fore_color.rgb = INTER
+        elif row.get("type","").lower() == "advanced":
+            fill.fore_color.rgb = ADV
+            
         # add image if present / exists
         if row.get("arch","").lower() == "vertical":
             img_path = "vertical.png"
@@ -87,6 +90,9 @@ def generate_pptx():
             except Exception as e:
                 print(f"[Warning] could not add image for row {i}: {e}")
 
+        add_textbox(slide, "bonus", 0.15, 1.57, 0.5, 0.375, 7, DEFAULT_FONT)
+        add_textbox(slide, "c", 1.83, 1.57, 0.1, 0.375, 7, DEFAULT_FONT)
+        
         # place fields using POSITIONS map; skip fields not present
         for field, pos in POSITIONS.items():
             if field in row.index:    

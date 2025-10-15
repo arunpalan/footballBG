@@ -16,17 +16,20 @@ PAGE_HEIGHT_IN = 1
 # Position map: field -> (left_in, top_in, width_in, height_in, font_pt)
 # Edit coordinates to match your template's spots.
 POSITIONS = {
-    "name":       (0.125, 0.125, 0.75, 0.1875, 4),
-    "bonus":      (0.8, 0.425, 0.1875, 0.1875, 8),
-    "clutch":     (0.8, 0.625, 0.1875, 0.1875, 8)
+    "name":       (0.05, 0.05, 0.75, 0.1875, 4),
+    "bonus":      (0.65, 0.425, 0.1875, 0.1875, 8),
+    "clutch":     (0.65, 0.625, 0.1875, 0.1875, 8)
     }
 
 DEFAULT_FONT = "Tecmo Bowl"
 FIELD_FONTS = {
 }
 
+RED = RGBColor(156,47,93)
+BLUE = RGBColor(60,121,236)
+
 # add near POSITIONS or at top
-IMAGE_POS = (0.125, 0.375, 0.5, 0.5) # (left_in, top_in, width_in, height_in)
+IMAGE_POS = (0.05, 0.375, 0.5, 0.5) # (left_in, top_in, width_in, height_in)
 
 def add_textbox(slide, text, left, top, width, height, font_pt=12, font_name=None, color_rgb=(0,0,0)):
     """Add a textbox and set font name/size/color. font_name must be installed on the system."""
@@ -57,23 +60,16 @@ def generate_pptx():
 
     for i, row in df.iterrows():
         slide = prs.slides.add_slide(blank_layout)
-
-        # Add the image to the slide, positioned at (0,0) and filling the entire slide
-        left = top = Inches(0)
         
-        # choose player template background image
-        if row.get("side","").lower() == "offense":
-            pic = slide.shapes.add_picture('player_template_offense.jpeg', left, top, 
-                                    width=prs.slide_width, height=prs.slide_height)
+        # Change background color
+        background = slide.background
+        fill = background.fill
+        fill.solid()
+        if row.get("type","").lower() == "offense":
+            fill.fore_color.rgb = BLUE
         else:
-            pic = slide.shapes.add_picture('player_template_defense.jpeg', left, top, 
-                                    width=prs.slide_width, height=prs.slide_height)
+            fill.fore_color.rgb = RED
         
-        # Move the image to the background by manipulating the XML element tree
-        # This sends the picture behind all other shapes on the slide
-        slide.shapes._spTree.remove(pic._element)
-        slide.shapes._spTree.insert(2, pic._element) 
-
         # add image if present / exists
         if row.get("arch","").lower() == "vertical":
             img_path = "vertical.png"
@@ -90,6 +86,9 @@ def generate_pptx():
                 slide.shapes.add_picture(img_path, Inches(left), Inches(top), width=Inches(w), height=Inches(h))
             except Exception as e:
                 print(f"[Warning] could not add image for row {i}: {e}")
+
+        add_textbox(slide, "+", 0.55, 0.475, 0.1, 0.1, 4, DEFAULT_FONT)
+        add_textbox(slide, "c", 0.55, 0.675, 0.1, 0.1, 4, DEFAULT_FONT)
 
         # place fields using POSITIONS map; skip fields not present
         for field, pos in POSITIONS.items():

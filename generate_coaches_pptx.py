@@ -19,16 +19,15 @@ PAGE_HEIGHT_IN = 2
 POSITIONS = {
     "name":       (0.1875, 0.1875, 1.75, 0.25, 8),
     "type":         (0.1875, 0.4375, 1, 0.125, 6),
-    "salary":      (2.0625, 0.1875, 0.25, 0.25, 12),
     }
 
 DEFAULT_FONT = "Tecmo Bowl"
 FIELD_FONTS = {
 }
 
-BLUE = RGBColor(51,255,255)
-GREEN = RGBColor(100,255,51)
-ORANGE = RGBColor(255,153,51)
+BASE = RGBColor(115,250,121)
+INTER = RGBColor(255,252,121)
+ADV = RGBColor(255,126,121)
 
 # add near POSITIONS or at top
 IMAGE_POS = (1.5, 0.75, 0.75, 0.75) # (left_in, top_in, width_in, height_in)
@@ -53,7 +52,7 @@ def add_textbox(slide, text, left, top, width, height, font_pt=12, font_name=Non
     r, g, b = color_rgb
     font.color.rgb = RGBColor(r, g, b)
 
-def add_oval(slide, left, top, width, height, color):
+def add_oval(slide, left, top, width, height, text='X', color=RGBColor(255,255,255)):
     # add an oval (position and size in inches)
     oval_left, oval_top, oval_w, oval_h = left, top, width, height
     oval = slide.shapes.add_shape(
@@ -76,7 +75,7 @@ def add_oval(slide, left, top, width, height, color):
     tf.clear()
     p = tf.paragraphs[0]
     run = p.add_run()
-    run.text = "X"
+    run.text = text
     run.font.size = Pt(12)
     run.font.name = DEFAULT_FONT
     
@@ -120,6 +119,8 @@ def generate_pptx():
     for i, row in df.iterrows():
         slide = prs.slides.add_slide(blank_layout)
         
+        add_oval(slide, 2.0625, 0.1875, 0.25, 0.25, row['salary'], RGBColor(255,255,255))
+        
         # calculate number of nonzero attributes
         attrs = []
         attr_titles = []
@@ -135,32 +136,32 @@ def generate_pptx():
         attrs, attr_titles = zip(*sorted(zip(attrs, attr_titles), reverse=True))
                 
         if attrs[0] == 2.0:
-            color = ORANGE
+            color = ADV
         elif attrs[0] == 1.0:
-            color = GREEN
+            color = INTER
         elif attrs[0] == 0.5:
-            color = BLUE
+            color = BASE
         
-        add_oval(slide, 0.2, 0.7, 0.5, 0.5, color)
+        add_oval(slide, 0.2, 0.7, 0.5, 0.5, 'X', color)
         
         if len(attrs) > 2:
             if attrs[1] == 2.0:
-                color = ORANGE
+                color = ADV
             elif attrs[1] == 1.0:
-                color = GREEN
+                color = INTER
             elif attrs[1] == 0.5:
-                color = BLUE
+                color = BASE
                 
-            add_oval(slide, 1.8, 1.0, 0.5, 0.5, color)
+            add_oval(slide, 1.8, 1.0, 0.5, 0.5, 'X',color)
             
             if attrs[2] == 2.0:
-                color = ORANGE
+                color = ADV
             elif attrs[2] == 1.0:
-                color = GREEN
+                color = INTER
             elif attrs[2] == 0.5:
-                color = BLUE
+                color = BASE
                 
-            add_oval(slide, 0.2, 1.3, 0.5, 0.5, color)
+            add_oval(slide, 0.2, 1.3, 0.5, 0.5, 'X', color)
             
             add_rectangle(slide, 0.75, 0.7, 1.5, 0.25, attr_titles[0])
             add_rectangle(slide, 1.0, 1.0, 0.75, 0.5, attr_titles[1])
@@ -171,13 +172,13 @@ def generate_pptx():
 
             if len(attrs) > 1:
                 if attrs[1] == 2.0:
-                    color = ORANGE
+                    color = ADV
                 elif attrs[1] == 1.0:
-                    color = GREEN
+                    color = INTER
                 elif attrs[1] == 0.5:
-                    color = BLUE
+                    color = BASE
                 
-            add_oval(slide, 0.2, 1.3, 0.5, 0.5, color)
+            add_oval(slide, 0.2, 1.3, 0.5, 0.5, 'X', color)
             add_rectangle(slide, 0.75, 1.3, 1.5, 0.5, attr_titles[1])
                         
         # place fields using POSITIONS map; skip fields not present

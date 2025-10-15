@@ -65,18 +65,28 @@ def generate_pptx():
         # Add the image to the slide, positioned at (0,0) and filling the entire slide
         left = top = Inches(0)
         
-        # # choose player template background image
-        # if row.get("side","").lower() == "offense":
-        #     pic = slide.shapes.add_picture('player_template_offense.jpeg', left, top, 
-        #                             width=prs.slide_width, height=prs.slide_height)
-        # else:
-        #     pic = slide.shapes.add_picture('player_template_defense.jpeg', left, top, 
-        #                             width=prs.slide_width, height=prs.slide_height)
+        # choose player template background image
+        if row.get("quality","") == 1:
+            pic = slide.shapes.add_picture('team_q1.jpeg', left, top, 
+                                    width=prs.slide_width, height=prs.slide_height)
+        elif row.get("quality","") == 2:
+            pic = slide.shapes.add_picture('team_q2.jpeg', left, top, 
+                                    width=prs.slide_width, height=prs.slide_height)
+        elif row.get("quality","") == 3:
+            pic = slide.shapes.add_picture('team_q3.jpeg', left, top, 
+                                    width=prs.slide_width, height=prs.slide_height)
+        elif row.get("quality","") == 4:
+            pic = slide.shapes.add_picture('team_q4.jpeg', left, top, 
+                                    width=prs.slide_width, height=prs.slide_height)
+        elif row.get("quality","") == 5:
+            pic = slide.shapes.add_picture('team_q5.jpeg', left, top, 
+                                    width=prs.slide_width, height=prs.slide_height)
         
-        # # Move the image to the background by manipulating the XML element tree
-        # # This sends the picture behind all other shapes on the slide
-        # slide.shapes._spTree.remove(pic._element)
-        # slide.shapes._spTree.insert(2, pic._element) 
+            
+        # Move the image to the background by manipulating the XML element tree
+        # This sends the picture behind all other shapes on the slide
+        slide.shapes._spTree.remove(pic._element)
+        slide.shapes._spTree.insert(2, pic._element) 
 
         # add image if present / exists
         if row.get("arch","").lower() == "vertical":
